@@ -20,6 +20,7 @@ import (
 	"github.com/masante/masante/app"
 )
 
+// version : version of the app
 var version = "dev"
 
 func main() {
