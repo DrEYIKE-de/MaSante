@@ -1,0 +1,8 @@
+masante
+masante-data/
+*.db
+*.db-wal
+*.db-shm
+.idea/
+.DS_Store
+dist/
