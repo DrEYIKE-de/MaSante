@@ -53,7 +53,7 @@ async function logout() {
       <!-- Brand -->
       <div class="sb-brand">
         <div class="sb-logo">
-          <svg width="20" height="20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="40" r="8" fill="white"/></svg>
+          <svg width="20" height="20" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="8" stroke-linecap="round"/><circle cx="40" cy="40" r="10" fill="white"/></svg>
         </div>
         <div class="sb-brand-text">
           <h3>MaSante</h3>

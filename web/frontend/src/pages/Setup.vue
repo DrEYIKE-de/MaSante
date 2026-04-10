@@ -121,7 +121,7 @@ const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
   <div style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--white);z-index:100">
     <!-- Header -->
     <div class="setup-header">
-      <div class="sh-logo"><svg width="18" height="18" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="40" r="8" fill="white"/></svg></div>
+      <div class="sh-logo"><svg width="18" height="18" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="8" stroke-linecap="round"/><circle cx="40" cy="40" r="10" fill="white"/></svg></div>
       <h2>Configuration de MaSante</h2>
       <span class="sh-step">Etape {{ step }} sur {{ total }}</span>
     </div>

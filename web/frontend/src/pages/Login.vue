@@ -30,7 +30,7 @@ async function login() {
   <div style="position:fixed;inset:0;display:flex;z-index:100">
     <div style="flex:1;background:var(--primary);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff">
       <div style="text-align:center">
-        <div style="width:80px;height:80px;border:2px solid rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;background:rgba(255,255,255,.06);"><svg width="40" height="40" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="40" r="8" fill="white"/></svg></div>
+        <div style="width:80px;height:80px;border:2px solid rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;background:rgba(255,255,255,.06);"><svg width="40" height="40" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40 8C22.3 8 8 22.3 8 40c0 17.7 14.3 32 32 32s32-14.3 32-32" stroke="white" stroke-width="8" stroke-linecap="round"/><circle cx="40" cy="40" r="10" fill="white"/></svg></div>
         <h1 style="font-size:2.8rem;font-weight:700;letter-spacing:-1.5px;margin-bottom:8px">MaSante</h1>
         <p style="font-size:1rem;color:rgba(255,255,255,.5)">Plateforme de suivi sante communautaire</p>
       </div>
