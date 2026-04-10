@@ -45,6 +45,11 @@ func (s *SetupService) IsSetupDone(ctx context.Context) (bool, error) {
 	return s.center.IsSetupDone(ctx)
 }
 
+// GetCenter returns the center configuration.
+func (s *SetupService) GetCenter(ctx context.Context) (*domain.Center, error) {
+	return s.center.Get(ctx)
+}
+
 // GetSetupStep returns the current step (0-5).
 func (s *SetupService) GetSetupStep(ctx context.Context) (int, error) {
 	return s.center.GetSetupStep(ctx)

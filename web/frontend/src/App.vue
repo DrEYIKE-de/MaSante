@@ -17,6 +17,9 @@ onMounted(async () => {
     return
   }
   store.setupDone = true
+  if (res.ok && res.data.center_name) {
+    store.centerName = res.data.center_name
+  }
 
   const me = await auth.me()
   if (me.ok) {

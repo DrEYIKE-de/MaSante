@@ -241,18 +241,22 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 }
 
 .sb-user {
-  padding: 16px 18px;
-  border-top: 1px solid rgba(255,255,255,.06);
+  padding: 14px 16px;
+  margin: 0 10px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.08);
   display: flex; align-items: center; gap: 10px;
 }
 .sb-avatar {
-  width: 34px; height: 34px; border-radius: 8px;
-  background: var(--accent); opacity: .8;
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--accent);
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 700; font-size: .75rem;
+  color: #fff; font-weight: 700; font-size: .78rem;
+  flex-shrink: 0;
 }
-.sb-user-info .name { color: rgba(255,255,255,.85); font-size: .82rem; font-weight: 600; }
-.sb-user-info .role { color: rgba(255,255,255,.35); font-size: .7rem; }
+.sb-user-info { flex: 1; min-width: 0; }
+.sb-user-info .name { color: #fff; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-user-info .role { color: rgba(255,255,255,.45); font-size: .7rem; }
 
 /* ── Main ── */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }

@@ -15,7 +15,11 @@ func (s *Server) handleSetupStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	step, _ := s.setup.GetSetupStep(r.Context())
-	writeJSON(w, http.StatusOK, map[string]any{"setup_complete": done, "current_step": step})
+	centerName := ""
+	if center, err := s.setup.GetCenter(r.Context()); err == nil && center != nil {
+		centerName = center.Name
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"setup_complete": done, "current_step": step, "center_name": centerName})
 }
 
 func (s *Server) handleSetupCenter(w http.ResponseWriter, r *http.Request) {

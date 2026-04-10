@@ -10,26 +10,33 @@ const toast = useToast()
 
 const navSections = [
   { label: 'Principal', items: [
-    { icon: 'chart', text: 'Tableau de bord', path: '/' },
-    { icon: 'calendar', text: 'Calendrier RDV', path: '/calendar' },
-    { icon: 'plus', text: 'Prise de RDV', path: '/new-apt' },
+    { text: 'Tableau de bord', path: '/' },
+    { text: 'Calendrier RDV', path: '/calendar' },
+    { text: 'Prise de RDV', path: '/new-apt' },
   ]},
   { label: 'Patients', items: [
-    { icon: 'user-plus', text: 'Nouveau patient', path: '/new-patient' },
-    { icon: 'users', text: 'Liste patients', path: '/patients' },
+    { text: 'Nouveau patient', path: '/new-patient' },
+    { text: 'Liste patients', path: '/patients' },
   ]},
   { label: 'Terrain', items: [
-    { icon: 'bell', text: 'Rappels', path: '/reminders' },
+    { text: 'Rappels', path: '/reminders' },
   ]},
   { label: 'Systeme', items: [
-    { icon: 'shield', text: 'Utilisateurs', path: '/users' },
-    { icon: 'settings', text: 'Parametres', path: '/settings' },
-    { icon: 'help-circle', text: "Centre d'aide", path: '/help' },
+    { text: 'Utilisateurs', path: '/users' },
+    { text: 'Parametres', path: '/settings' },
+    { text: "Centre d'aide", path: '/help' },
   ]},
 ]
 
+const roleLabels = {
+  admin: 'Administrateur',
+  medecin: 'Medecin',
+  infirmier: 'Infirmier(e)',
+  asc: 'Agent communautaire',
+}
+
 function initials(name) {
-  return (name || '??').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
+  return (name || '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || '?'
 }
 
 async function logout() {
@@ -42,16 +49,25 @@ async function logout() {
 
 <template>
   <div class="app visible">
-    <!-- Sidebar -->
     <aside class="sidebar">
+      <!-- Brand -->
       <div class="sb-brand">
-        <div class="sb-logo">&#127807;</div>
+        <div class="sb-logo">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4C10 8 6 14 8 22c1 4 4 6 8 6s7-2 8-6c2-8-2-14-8-18z"/>
+            <path d="M16 10v14" opacity=".5"/>
+            <path d="M16 14l5-2" opacity=".4"/>
+            <path d="M16 18l-4-2" opacity=".4"/>
+          </svg>
+        </div>
         <div class="sb-brand-text">
           <h3>MaSante</h3>
-          <span>Plateforme de sante</span>
+          <span v-if="store.centerName">{{ store.centerName }}</span>
+          <span v-else>Plateforme de sante</span>
         </div>
       </div>
 
+      <!-- Nav -->
       <nav class="sb-nav">
         <div v-for="section in navSections" :key="section.label" class="sb-section">
           <div class="sb-section-label">{{ section.label }}</div>
@@ -67,26 +83,31 @@ async function logout() {
         </div>
       </nav>
 
+      <!-- User -->
       <div class="sb-user">
         <div class="sb-avatar" @click="router.push('/profile')" style="cursor:pointer">
           {{ store.user ? initials(store.user.full_name) : '?' }}
         </div>
         <div class="sb-user-info" @click="router.push('/profile')" style="cursor:pointer">
           <div class="name">{{ store.user?.full_name || '' }}</div>
-          <div class="role">{{ store.user?.role || '' }}</div>
+          <div class="role">{{ roleLabels[store.user?.role] || store.user?.role || '' }}</div>
         </div>
-        <button class="icon-btn" @click="logout" title="Deconnecter" style="color:rgba(255,255,255,.35);flex-shrink:0">
-          &#x2192;
+        <button class="icon-btn" @click="logout" title="Se deconnecter" style="color:rgba(255,255,255,.4);flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
         </button>
       </div>
     </aside>
 
-    <!-- Main -->
     <main class="main">
       <header class="topbar">
         <div class="topbar-title">{{ route.meta.title || 'MaSante' }}</div>
         <div v-if="!route.meta.hideSearch" class="topbar-search">
-          <input type="text" placeholder="Rechercher un patient..." @keydown.enter="searchPatient($event)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Rechercher un patient..." @keydown.enter="$router.push({ path: '/patients', query: { q: $event.target.value.trim() } })">
         </div>
         <div class="topbar-right">
           <div class="topbar-badge online">
@@ -102,16 +123,3 @@ async function logout() {
     </main>
   </div>
 </template>
-
-<script>
-export default {
-  methods: {
-    searchPatient(e) {
-      const q = e.target.value.trim()
-      if (q) {
-        this.$router.push({ path: '/patients', query: { q } })
-      }
-    }
-  }
-}
-</script>
