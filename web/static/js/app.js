@@ -691,7 +691,7 @@ async function pageProfile(c){
     if(!cp.value){pe.textContent='Mot de passe actuel requis';pe.style.display='block';return}
     const pwdErr=validatePwd(np.value);if(pwdErr){pe.textContent=pwdErr;pe.style.display='block';return}
     if(np.value!==cfp.value){pe.textContent='Les mots de passe ne correspondent pas';pe.style.display='block';return}
-    const r=await prof.changePwd(cp.value,np.value);if(r.ok)toast('Mot de passe change — reconnectez-vous','success');else{pe.textContent=r.error;pe.style.display='block'}};
+    const r=await prof.changePwd(cp.value,np.value);if(r.ok){toast('Mot de passe change — redirection...','success');setTimeout(()=>{user=null;location.hash='#login';location.reload()},2000)}else{pe.textContent=r.error;pe.style.display='block'}};
   b2.appendChild(cpBtn);b2.appendChild(pe);c2.appendChild(b2);grid.appendChild(c2);c.appendChild(grid);
 }
 
