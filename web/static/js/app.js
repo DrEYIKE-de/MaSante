@@ -182,12 +182,12 @@ async function pageSetup(c){
   footer.appendChild(prevBtn);footer.appendChild(nextBtn);wrap.appendChild(footer);
   c.appendChild(wrap);renderStep();
 
+  const refs={};
+
   function renderStep(){
     content.textContent='';
     if(step===1)renderStep1();else if(step===2)renderStep2();else if(step===3)renderStep3();else if(step===4)renderStep4();else renderStep5();
   }
-
-  const refs={};
   function input(lbl,type,id,ph,full){const g=el('div',{class:'form-group'+(full?' setup-full':'')});g.appendChild(el('label',{text:lbl}));const inp=el('input',{class:'form-input',type:type,placeholder:ph||''});refs[id]=inp;g.appendChild(inp);return g}
   function sel(lbl,id,opts,def){const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:lbl}));const s=el('select',{class:'form-input'});opts.forEach(o=>{const op=el('option',{value:o,text:o});if(o===def)op.selected=true;s.appendChild(op)});refs[id]=s;g.appendChild(s);return g}
 
