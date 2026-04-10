@@ -93,18 +93,29 @@ func (s *SetupService) CreateAdmin(ctx context.Context, req domain.SetupAdminReq
 		return fmt.Errorf("hash password: %w", err)
 	}
 
-	user := &domain.User{
-		Username:     req.Username,
-		PasswordHash: hash,
-		FullName:     req.FullName,
-		Email:        req.Email,
-		Role:         domain.RoleAdmin,
-		Title:        req.Title,
-		Status:       domain.UserActive,
-	}
-
-	if err := s.users.Create(ctx, user); err != nil {
-		return err
+	// Check if admin already exists (re-submission of step 2).
+	existing, _ := s.users.GetByUsername(ctx, req.Username)
+	if existing != nil {
+		existing.PasswordHash = hash
+		existing.FullName = req.FullName
+		existing.Email = req.Email
+		existing.Title = req.Title
+		if err := s.users.Update(ctx, existing); err != nil {
+			return err
+		}
+	} else {
+		user := &domain.User{
+			Username:     req.Username,
+			PasswordHash: hash,
+			FullName:     req.FullName,
+			Email:        req.Email,
+			Role:         domain.RoleAdmin,
+			Title:        req.Title,
+			Status:       domain.UserActive,
+		}
+		if err := s.users.Create(ctx, user); err != nil {
+			return err
+		}
 	}
 	return s.center.SetSetupStep(ctx, 2)
 }

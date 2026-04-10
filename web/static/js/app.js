@@ -167,7 +167,7 @@ async function pageSetup(c){
   function updateNext(){nextBtn.textContent='';if(step===total){nextBtn.appendChild(document.createTextNode('Lancer MaSante '));nextBtn.appendChild(svg('check',14))}else{nextBtn.appendChild(document.createTextNode('Suivant '));nextBtn.appendChild(svg('right',14))}}
   updateNext();
 
-  prevBtn.onclick=()=>{if(step<=1)return;step--;renderStep();stepLbl.textContent='Etape '+step+' sur '+total;progFill.style.width=(step/total*100)+'%';prevBtn.style.visibility=step===1?'hidden':'visible';updateNext();errEl.style.display='none'};
+  prevBtn.onclick=()=>{if(step<=1)return;collectCurrentStep();step--;renderStep();restoreStep();stepLbl.textContent='Etape '+step+' sur '+total;progFill.style.width=(step/total*100)+'%';prevBtn.style.visibility=step===1?'hidden':'visible';updateNext();errEl.style.display='none'};
 
   nextBtn.onclick=async()=>{
     errEl.style.display='none';nextBtn.disabled=true;
@@ -176,13 +176,29 @@ async function pageSetup(c){
     if(err){errEl.textContent=err;errEl.style.display='block';return}
     step++;
     if(step>total){location.hash='#login';location.reload();return}
-    renderStep();stepLbl.textContent='Etape '+step+' sur '+total;progFill.style.width=(step/total*100)+'%';prevBtn.style.visibility='visible';updateNext()
+    renderStep();restoreStep();stepLbl.textContent='Etape '+step+' sur '+total;progFill.style.width=(step/total*100)+'%';prevBtn.style.visibility='visible';updateNext()
   };
 
   const refs={};
 
   footer.appendChild(prevBtn);footer.appendChild(nextBtn);wrap.appendChild(footer);
   c.appendChild(wrap);renderStep();
+
+  function collectCurrentStep(){
+    if(step===1){const typeEl=$('#s-types .type-opt.on');const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};data.center={name:v('s-name'),type:typeEl?typeMap[typeEl.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'))}
+    else if(step===2){data.admin={full_name:v('s-name2'),email:v('s-email'),username:v('s-user'),password:v('s-pwd'),title:v('s-title')}}
+    else if(step===3){const days=[];$$('.day-check.on').forEach((_,i)=>days.push(i+1));data.schedule={consultation_days:days.join(','),start_time:v('s-start'),end_time:v('s-end'),slot_duration:v('s-slot'),max_patients_day:v('s-max')}}
+    else if(step===4){const en=$('#s-sms-enable .type-opt.on');data.sms={enabled:en&&en.textContent.indexOf('Oui')>=0,provider:v('s-sms-prov'),api_key:v('s-sms-key'),api_secret:v('s-sms-sec'),sender_id:v('s-sms-sender')}}
+  }
+
+  function restoreStep(){
+    if(step===1&&data.center.name){if(refs['s-name'])refs['s-name'].value=data.center.name;if(refs['s-country'])refs['s-country'].value=data.center.country||'Cameroun';if(refs['s-city'])refs['s-city'].value=data.center.city||'';if(refs['s-district'])refs['s-district'].value=data.center.district||'';if(data.center.lat&&refs['s-lat'])refs['s-lat'].value=data.center.lat;if(data.center.lng&&refs['s-lng'])refs['s-lng'].value=data.center.lng;
+      const typeRevMap={hopital_public:'Hopital public',centre_sante:'Centre de sante',clinique_privee:'Clinique privee'};const typeName=typeRevMap[data.center.type];if(typeName){$$('#s-types .type-opt').forEach(b=>{b.classList.toggle('on',b.textContent===typeName)})}}
+    else if(step===2&&data.admin.full_name){if(refs['s-name2'])refs['s-name2'].value=data.admin.full_name;if(refs['s-email'])refs['s-email'].value=data.admin.email||'';if(refs['s-user'])refs['s-user'].value=data.admin.username||'';if(refs['s-pwd'])refs['s-pwd'].value=data.admin.password||'';if(refs['s-pwd2'])refs['s-pwd2'].value=data.admin.password||'';if(refs['s-title'])refs['s-title'].value=data.admin.title||'Medecin referent'}
+    else if(step===3&&data.schedule.start_time){if(refs['s-start'])refs['s-start'].value=data.schedule.start_time;if(refs['s-end'])refs['s-end'].value=data.schedule.end_time;if(refs['s-slot'])refs['s-slot'].value=data.schedule.slot_duration||'30';if(refs['s-max'])refs['s-max'].value=data.schedule.max_patients_day||'40';
+      if(data.schedule.consultation_days){const activeDays=data.schedule.consultation_days.split(',').map(Number);$$('.day-check').forEach((b,i)=>b.classList.toggle('on',activeDays.includes(i+1)))}}
+    else if(step===4){if(data.sms.enabled){$$('#s-sms-enable .type-opt').forEach(b=>b.classList.toggle('on',b.textContent.indexOf('Oui')>=0))}if(refs['s-sms-prov'])refs['s-sms-prov'].value=data.sms.provider||"Africa's Talking";if(refs['s-sms-key'])refs['s-sms-key'].value=data.sms.api_key||'';if(refs['s-sms-sec'])refs['s-sms-sec'].value=data.sms.api_secret||'';if(refs['s-sms-sender'])refs['s-sms-sender'].value=data.sms.sender_id||''}
+  }
 
   function renderStep(){
     content.textContent='';
