@@ -171,7 +171,8 @@ async function pageSetup(c){
   const footer=el('div',{class:'setup-footer'});
   const prevBtn=el('button',{class:'btn btn-secondary',style:'width:auto;visibility:'+(step===1?'hidden':'visible')});
   prevBtn.appendChild(svg('left',14));prevBtn.appendChild(document.createTextNode(' Precedent'));
-  const nextBtn=el('button',{class:'btn btn-primary',style:'width:auto'});
+  const nextBtn=el('button',{class:'btn btn-primary',style:'width:auto',disabled:'true'});
+  nextBtn.style.opacity='0.5';nextBtn.style.cursor='not-allowed';
   function updateNext(){nextBtn.textContent='';if(step===total){nextBtn.appendChild(document.createTextNode('Lancer MaSante '));nextBtn.appendChild(svg('check',14))}else{nextBtn.appendChild(document.createTextNode('Suivant '));nextBtn.appendChild(svg('right',14))}}
   updateNext();
 
@@ -208,9 +209,36 @@ async function pageSetup(c){
     else if(step===4){if(data.sms.enabled){$$('#s-sms-enable .type-opt').forEach(b=>b.classList.toggle('on',b.textContent.indexOf('Oui')>=0))}if(refs['s-sms-prov'])refs['s-sms-prov'].value=data.sms.provider||"Africa's Talking";if(refs['s-sms-key'])refs['s-sms-key'].value=data.sms.api_key||'';if(refs['s-sms-sec'])refs['s-sms-sec'].value=data.sms.api_secret||'';if(refs['s-sms-sender'])refs['s-sms-sender'].value=data.sms.sender_id||''}
   }
 
+  const requiredByStep={
+    1:['s-name','s-city'],
+    2:['s-name2','s-email','s-user','s-pwd','s-pwd2'],
+    3:[],
+    4:[],
+    5:[]
+  };
+
+  function checkCanProceed(){
+    const fields=requiredByStep[step]||[];
+    const allFilled=fields.every(id=>{const r=refs[id];return r&&r.value&&r.value.trim().length>0});
+    nextBtn.disabled=!allFilled;
+    nextBtn.style.opacity=allFilled?'1':'0.5';
+    nextBtn.style.cursor=allFilled?'pointer':'not-allowed';
+  }
+
+  // Listen for input events on all form fields to enable/disable Suivant.
+  function attachLiveValidation(){
+    Object.values(refs).forEach(inp=>{
+      if(inp&&inp.addEventListener){
+        inp.removeEventListener('input',checkCanProceed);
+        inp.addEventListener('input',checkCanProceed);
+      }
+    });
+  }
+
   function renderStep(){
     content.textContent='';
     if(step===1)renderStep1();else if(step===2)renderStep2();else if(step===3)renderStep3();else if(step===4)renderStep4();else renderStep5();
+    setTimeout(()=>{attachLiveValidation();checkCanProceed()},0);
   }
   function input(lbl,type,id,ph,full){const g=el('div',{class:'form-group'+(full?' setup-full':'')});g.appendChild(el('label',{text:lbl}));const inp=el('input',{class:'form-input',type:type,placeholder:ph||''});refs[id]=inp;g.appendChild(inp);return g}
   function sel(lbl,id,opts,def){const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:lbl}));const s=el('select',{class:'form-input'});opts.forEach(o=>{const op=el('option',{value:o,text:o});if(o===def)op.selected=true;s.appendChild(op)});refs[id]=s;g.appendChild(s);return g}
@@ -219,7 +247,7 @@ async function pageSetup(c){
     content.appendChild(el('h3',{text:'Votre etablissement'}));
     content.appendChild(el('p',{class:'setup-desc',text:'Ces informations identifient votre centre de sante.'}));
     const g=el('div',{class:'setup-grid'});
-    g.appendChild(input('Nom','text','s-name','Ex: Hopital Laquintinie',true));
+    g.appendChild(input('Nom de l\'etablissement *','text','s-name','Ex: Hopital Laquintinie',true));
     const types=el('div',{class:'type-options',id:'s-types',style:'margin:6px 0 14px'});
     ['Hopital public','Centre de sante','Clinique privee'].forEach((t,i)=>{
       const b=el('div',{class:'type-opt'+(i===1?' on':''),text:t});
@@ -257,12 +285,12 @@ async function pageSetup(c){
     content.appendChild(el('h3',{text:'Compte administrateur'}));
     content.appendChild(el('p',{class:'setup-desc',text:'Ce sera le premier utilisateur avec tous les droits.'}));
     const g=el('div',{class:'setup-grid'});
-    g.appendChild(input('Nom complet','text','s-name2','Ex: Dr. Adele Mbarga'));
-    g.appendChild(input('Email','email','s-email','Ex: adele@hopital.cm'));
-    g.appendChild(input('Identifiant','text','s-user','Choisir un identifiant'));
+    g.appendChild(input('Nom complet *','text','s-name2','Ex: Dr. Adele Mbarga'));
+    g.appendChild(input('Email *','email','s-email','Ex: adele@hopital.cm'));
+    g.appendChild(input('Identifiant *','text','s-user','Choisir un identifiant'));
     g.appendChild(sel('Fonction','s-title',['Medecin referent','Chef de service','Directeur','Coordinateur programme']));
-    g.appendChild(input('Mot de passe','password','s-pwd','Min 8 caracteres + 1 chiffre',true));
-    g.appendChild(input('Confirmer','password','s-pwd2','Retapez le mot de passe',true));
+    g.appendChild(input('Mot de passe *','password','s-pwd','Min 8 caracteres + 1 chiffre',true));
+    g.appendChild(input('Confirmer le mot de passe *','password','s-pwd2','Retapez le mot de passe',true));
     content.appendChild(g);
   }
   function renderStep3(){
@@ -315,7 +343,7 @@ async function pageSetup(c){
       const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};const typeEl=$('#s-types .type-opt.on');
       data.center={name:v('s-name'),type:typeEl?typeMap[typeEl.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'));res=await setupApi.center(data.center)}
     else if(step===2){
-      const reqErr=validateRequired(refs,[['s-name2','Nom complet'],['s-user','Identifiant'],['s-pwd','Mot de passe']]);if(reqErr)return reqErr;
+      const reqErr=validateRequired(refs,[['s-name2','Nom complet'],['s-email','Email'],['s-user','Identifiant'],['s-pwd','Mot de passe'],['s-pwd2','Confirmation du mot de passe']]);if(reqErr)return reqErr;
       const pwdErr=validatePwd(v('s-pwd'));if(pwdErr){markError(refs['s-pwd'],pwdErr);return pwdErr}else clearError(refs['s-pwd']);
       if(v('s-pwd')!==v('s-pwd2')){markError(refs['s-pwd2'],'');return'Les mots de passe ne correspondent pas'}else clearError(refs['s-pwd2']);
       const emailErr=validateEmail(v('s-email'));if(emailErr){markError(refs['s-email'],emailErr);return emailErr}
