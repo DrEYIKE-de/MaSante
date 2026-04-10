@@ -18,16 +18,21 @@ func NewSMSConfigRepo(db *DB) *SMSConfigRepo {
 
 func (r *SMSConfigRepo) Get(ctx context.Context) (*domain.SMSConfig, error) {
 	c := &domain.SMSConfig{}
+	var updatedAt string
 	err := r.db.QueryRowContext(ctx,
 		`SELECT enabled, provider, api_key, api_secret, sender_id,
 		        reminder_j7, reminder_j2, reminder_j0, reminder_late, late_delay_days, updated_at
 		 FROM sms_config WHERE id = 1`,
 	).Scan(&c.Enabled, &c.Provider, &c.APIKey, &c.APISecret, &c.SenderID,
-		&c.ReminderJ7, &c.ReminderJ2, &c.ReminderJ0, &c.ReminderLate, &c.LateDelayDays, &c.UpdatedAt)
+		&c.ReminderJ7, &c.ReminderJ2, &c.ReminderJ0, &c.ReminderLate, &c.LateDelayDays, &updatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return &domain.SMSConfig{}, nil
 	}
-	return c, err
+	if err != nil {
+		return nil, err
+	}
+	c.UpdatedAt = parseTimeVal(updatedAt)
+	return c, nil
 }
 
 func (r *SMSConfigRepo) Save(ctx context.Context, c *domain.SMSConfig) error {
