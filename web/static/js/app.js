@@ -10,6 +10,7 @@ function pill(status){const m={active:['pill-success','Actif'],a_surveiller:['pi
 function risk(score){const s=score||5;let cls='low',lbl='Faible';if(s>6){cls='high';lbl='Eleve'}else if(s>3){cls='med';lbl='Moyen'}const sp=el('span',{class:'risk '+cls});sp.appendChild(el('span',{class:'risk-dot'}));sp.appendChild(document.createTextNode(' '+lbl));return sp}
 function fmtDate(d){if(!d)return'—';const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}
 function fmtType(t){return{consultation:'Consultation',retrait_medicaments:'Retrait medicaments',bilan_sanguin:'Bilan sanguin',club_adherence:"Club d'adherence"}[t]||t||''}
+function localDate(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day}
 
 // ── Validation ──
 function validatePwd(pwd){if(!pwd||pwd.length<8)return'Le mot de passe doit contenir au moins 8 caracteres';if(!/\d/.test(pwd))return'Le mot de passe doit contenir au moins 1 chiffre';return null}
@@ -467,7 +468,7 @@ async function pageCalendar(c){
   async function renderWeek(dateLabel){
     const mon=new Date(refDate);mon.setDate(refDate.getDate()-((refDate.getDay()+6)%7));
     dateLabel.textContent='Semaine du '+mon.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-    const ds=mon.toISOString().slice(0,10);
+    const ds=localDate(mon);
     container.appendChild(loading());
     const res=await cal.week(ds);
     const ld=container.querySelector('.ms-loading');if(ld)ld.remove();
@@ -481,7 +482,7 @@ async function pageCalendar(c){
     const aptsList=res.ok?(res.data||[]):[];const byDT={};
     aptsList.forEach(a=>{const k=(a.Date||'').slice(0,10)+'|'+(a.Time||'');if(!byDT[k])byDT[k]=[];byDT[k].push(a)});
     for(let h=8;h<=16;h++){const time=String(h).padStart(2,'0')+':00';const row=el('div',{class:'cal-row'});row.appendChild(el('div',{class:'cal-time',text:time}));
-      for(let d=0;d<7;d++){const dd=new Date(mon);dd.setDate(mon.getDate()+d);const ds2=dd.toISOString().slice(0,10);const slot=el('div',{class:'cal-slot'});
+      for(let d=0;d<7;d++){const dd=new Date(mon);dd.setDate(mon.getDate()+d);const ds2=localDate(dd);const slot=el('div',{class:'cal-slot'});
         (byDT[ds2+'|'+time]||[]).forEach(a=>{const sm={confirme:'c-ok',en_attente:'c-wait',manque:'c-miss',termine:'c-done'};slot.appendChild(el('div',{class:'cal-evt '+(sm[a.Status]||'c-ok'),text:(a.PatientName||'').split(' ')[0]}))});
         row.appendChild(slot)}body.appendChild(row)}
     grid.appendChild(body);container.appendChild(grid);
@@ -502,7 +503,7 @@ async function pageCalendar(c){
     for(let w=0;w<6;w++){
       const weekStart=new Date(firstMon);weekStart.setDate(firstMon.getDate()+w*7);
       if(weekStart.getMonth()>month&&weekStart.getFullYear()>=year&&w>0)break;
-      const res=await cal.week(weekStart.toISOString().slice(0,10));
+      const res=await cal.week(localDate(weekStart));
       if(res.ok&&res.data)allApts.push(...res.data);
     }
     const ld=container.querySelector('.ms-loading');if(ld)ld.remove();
@@ -524,7 +525,7 @@ async function pageCalendar(c){
     for(let row=0;row<6;row++){
       for(let col=0;col<7;col++){
         const d=new Date(cursor);
-        const ds=d.toISOString().slice(0,10);
+        const ds=localDate(d);
         const isCurrentMonth=d.getMonth()===month;
         const isToday=d.toDateString()===today.toDateString();
         const apts=byDay[ds]||[];
@@ -733,7 +734,7 @@ function showExit(p){
   const reasons=['deces','transfert','abandon','perdu_de_vue','guerison'];const labels=['Deces','Transfert','Abandon volontaire','Perdu de vue definitif','Guerison'];let selReason='';
   const opts=el('div');reasons.forEach((r,i)=>{const o=el('div',{style:'padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;font-size:.88rem',text:labels[i]});o.onclick=()=>{$$('div',opts).forEach(d=>{d.style.borderColor='var(--gray-200)';d.style.background=''});o.style.borderColor='var(--primary)';o.style.background='var(--primary-subtle)';selReason=r};opts.appendChild(o)});
   content.appendChild(opts);
-  const di=el('input',{class:'form-input',type:'date',value:new Date().toISOString().slice(0,10)});const dg=el('div',{class:'form-group',style:'margin-top:12px'});dg.appendChild(el('label',{text:'Date'}));dg.appendChild(di);content.appendChild(dg);
+  const di=el('input',{class:'form-input',type:'date',value:localDate(new Date())});const dg=el('div',{class:'form-group',style:'margin-top:12px'});dg.appendChild(el('label',{text:'Date'}));dg.appendChild(di);content.appendChild(dg);
   const ni=el('textarea',{class:'form-input',placeholder:'Notes...',rows:'3'});const ng2=el('div',{class:'form-group'});ng2.appendChild(el('label',{text:'Notes'}));ng2.appendChild(ni);content.appendChild(ng2);
 
   // Simple modal.
@@ -850,7 +851,7 @@ async function pageSettings(c){
   const grid=el('div',{class:'grid-2-wide',style:'align-items:start'});
   const c1=el('div',{class:'card'});const h1=el('div',{class:'card-head'});const t1=el('h3');t1.appendChild(svg('chart',18));t1.appendChild(document.createTextNode(' Rapports'));h1.appendChild(t1);c1.appendChild(h1);
   const b1=el('div',{class:'card-body'});
-  const now=new Date();const lm=new Date(now);lm.setMonth(lm.getMonth()-1);const ms=lm.toISOString().slice(0,7);
+  const now=new Date();const lm=new Date(now);lm.setMonth(lm.getMonth()-1);const ms=localDate(lm).slice(0,7);
   [['Rapport mensuel — '+ms,'/api/v1/export/monthly/excel?month='+ms,'/api/v1/export/monthly/pdf?month='+ms],['Patients actifs','/api/v1/export/patients/excel?status=active','/api/v1/export/patients/pdf?status=active'],['Perdus de vue','/api/v1/export/patients/excel?status=perdu_de_vue','/api/v1/export/patients/pdf?status=perdu_de_vue']].forEach(([label,exUrl,pdfUrl])=>{
     const item=el('div',{class:'list-item'});item.appendChild(el('div',{style:'flex:1',text:label}));
     const acts=el('div',{class:'pt-acts'});
