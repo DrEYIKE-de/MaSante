@@ -1,3 +1,5 @@
+// Package http provides the driving adapter — the HTTP API that
+// external clients (browser, mobile) use to interact with MaSante.
 package http
 
 import (
@@ -6,30 +8,47 @@ import (
 	"net/http"
 
 	"github.com/masante/masante/app"
+	"github.com/masante/masante/domain"
 )
 
+// Server is the HTTP driving adapter. It translates HTTP requests
+// into application service calls.
 type Server struct {
-	mux   *http.ServeMux
-	auth  *app.AuthService
-	setup *app.SetupService
+	mux            *http.ServeMux
+	auth           *app.AuthService
+	setup          *app.SetupService
+	patientSvc     *app.PatientService
+	appointmentSvc *app.AppointmentService
+	userSvc        *app.UserService
 }
 
-func NewServer(auth *app.AuthService, setup *app.SetupService) *Server {
+// NewServer creates a Server and registers all routes.
+func NewServer(
+	auth *app.AuthService,
+	setup *app.SetupService,
+	patientSvc *app.PatientService,
+	appointmentSvc *app.AppointmentService,
+	userSvc *app.UserService,
+) *Server {
 	s := &Server{
-		mux:   http.NewServeMux(),
-		auth:  auth,
-		setup: setup,
+		mux:            http.NewServeMux(),
+		auth:           auth,
+		setup:          setup,
+		patientSvc:     patientSvc,
+		appointmentSvc: appointmentSvc,
+		userSvc:        userSvc,
 	}
 	s.routes()
 	return s
 }
 
+// ServeHTTP implements http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
 func (s *Server) routes() {
-	// Setup (public, bloque si deja fait)
+	// Setup (public, blocked after completion).
 	s.mux.HandleFunc("GET /api/v1/setup/status", s.handleSetupStatus)
 	s.mux.HandleFunc("POST /api/v1/setup/center", s.guardSetup(s.handleSetupCenter))
 	s.mux.HandleFunc("POST /api/v1/setup/admin", s.guardSetup(s.handleSetupAdmin))
@@ -37,13 +56,53 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /api/v1/setup/sms", s.guardSetup(s.handleSetupSMS))
 	s.mux.HandleFunc("POST /api/v1/setup/complete", s.guardSetup(s.handleSetupComplete))
 
-	// Auth (public)
+	// Auth (public).
 	s.mux.HandleFunc("POST /api/v1/auth/login", s.handleLogin)
 	s.mux.HandleFunc("POST /api/v1/auth/logout", s.handleLogout)
 	s.mux.HandleFunc("GET /api/v1/auth/me", s.requireAuth(s.handleMe))
+
+	// Dashboard (authenticated).
+	s.mux.HandleFunc("GET /api/v1/dashboard/stats", s.requireAuth(s.handleDashboardStats))
+	s.mux.HandleFunc("GET /api/v1/dashboard/today", s.requireAuth(s.handleDashboardToday))
+	s.mux.HandleFunc("GET /api/v1/dashboard/overdue", s.requireAuth(s.handleDashboardOverdue))
+
+	// Users (admin only).
+	onlyAdmin := s.requireRole(domain.RoleAdmin)
+	s.mux.HandleFunc("GET /api/v1/users", onlyAdmin(s.handleListUsers))
+	s.mux.HandleFunc("POST /api/v1/users", onlyAdmin(s.handleCreateUser))
+	s.mux.HandleFunc("PUT /api/v1/users/{id}", onlyAdmin(s.handleUpdateUser))
+	s.mux.HandleFunc("DELETE /api/v1/users/{id}", onlyAdmin(s.handleDisableUser))
+	s.mux.HandleFunc("PUT /api/v1/users/{id}/reset-password", onlyAdmin(s.handleResetPassword))
+
+	// Profile (authenticated, self).
+	s.mux.HandleFunc("GET /api/v1/profile", s.requireAuth(s.handleGetProfile))
+	s.mux.HandleFunc("PUT /api/v1/profile", s.requireAuth(s.handleUpdateProfile))
+	s.mux.HandleFunc("PUT /api/v1/profile/password", s.requireAuth(s.handleChangePassword))
+	s.mux.HandleFunc("GET /api/v1/profile/activity", s.requireAuth(s.handleProfileActivity))
+
+	// Patients (authenticated).
+
+	s.mux.HandleFunc("GET /api/v1/patients", s.requireAuth(s.handleListPatients))
+	s.mux.HandleFunc("GET /api/v1/patients/search", s.requireAuth(s.handleSearchPatients))
+	s.mux.HandleFunc("GET /api/v1/patients/{id}", s.requireAuth(s.handleGetPatient))
+	s.mux.HandleFunc("POST /api/v1/patients", s.requireAuth(s.handleCreatePatient))
+	s.mux.HandleFunc("PUT /api/v1/patients/{id}", s.requireAuth(s.handleUpdatePatient))
+	s.mux.HandleFunc("PUT /api/v1/patients/{id}/exit", s.requireAuth(s.handleExitPatient))
+
+	// Appointments (authenticated).
+	s.mux.HandleFunc("POST /api/v1/appointments", s.requireAuth(s.handleCreateAppointment))
+	s.mux.HandleFunc("GET /api/v1/appointments/{id}", s.requireAuth(s.handleGetAppointment))
+	s.mux.HandleFunc("PUT /api/v1/appointments/{id}/complete", s.requireAuth(s.handleCompleteAppointment))
+	s.mux.HandleFunc("PUT /api/v1/appointments/{id}/missed", s.requireAuth(s.handleMissedAppointment))
+	s.mux.HandleFunc("PUT /api/v1/appointments/{id}/reschedule", s.requireAuth(s.handleRescheduleAppointment))
+	s.mux.HandleFunc("DELETE /api/v1/appointments/{id}", s.requireAuth(s.handleCancelAppointment))
+	s.mux.HandleFunc("GET /api/v1/appointments/slots", s.requireAuth(s.handleAvailableSlots))
+
+	// Calendar (authenticated).
+	s.mux.HandleFunc("GET /api/v1/calendar/week", s.requireAuth(s.handleCalendarWeek))
 }
 
-// guardSetup bloque l'acces si le setup est deja fait.
+// guardSetup blocks access if the setup wizard is already complete.
 func (s *Server) guardSetup(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		done, err := s.setup.IsSetupDone(r.Context())

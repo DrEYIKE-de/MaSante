@@ -20,7 +20,7 @@ import (
 	"github.com/masante/masante/app"
 )
 
-// version : version of the app
+// version is set at build time via ldflags.
 var version = "dev"
 
 func main() {
@@ -38,8 +38,6 @@ func main() {
 		log.Fatalf("impossible de creer %s: %v", *dataDir, err)
 	}
 
-	// --- Driven adapters (infrastructure) ---
-
 	db, err := sqlite.Open(filepath.Join(*dataDir, "masante.db"))
 	if err != nil {
 		log.Fatalf("base de donnees: %v", err)
@@ -50,21 +48,25 @@ func main() {
 		log.Fatalf("migration: %v", err)
 	}
 
+	// Driven adapters.
 	userRepo := sqlite.NewUserRepo(db)
 	sessionRepo := sqlite.NewSessionRepo(db)
 	centerRepo := sqlite.NewCenterRepo(db)
 	smsConfigRepo := sqlite.NewSMSConfigRepo(db)
 	auditRepo := sqlite.NewAuditRepo(db)
+	patientRepo := sqlite.NewPatientRepo(db)
+	appointmentRepo := sqlite.NewAppointmentRepo(db)
 	hasher := adapter.BcryptHasher{}
 
-	// --- Application services ---
+	// Application services.
+	authSvc := app.NewAuthService(userRepo, sessionRepo, hasher, auditRepo)
+	setupSvc := app.NewSetupService(centerRepo, userRepo, smsConfigRepo, hasher, auditRepo)
+	patientSvc := app.NewPatientService(patientRepo, auditRepo)
+	appointmentSvc := app.NewAppointmentService(appointmentRepo, patientRepo, auditRepo)
+	userSvc := app.NewUserService(userRepo, sessionRepo, hasher, auditRepo)
 
-	authService := app.NewAuthService(userRepo, sessionRepo, hasher, auditRepo)
-	setupService := app.NewSetupService(centerRepo, userRepo, smsConfigRepo, hasher, auditRepo)
-
-	// --- Driving adapter (HTTP) ---
-
-	srv := httpAdapter.NewServer(authService, setupService)
+	// Driving adapter.
+	srv := httpAdapter.NewServer(authSvc, setupSvc, patientSvc, appointmentSvc, userSvc)
 
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
@@ -74,12 +76,9 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// --- Background tasks ---
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Nettoyage des sessions expirees toutes les heures
 	go func() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
@@ -88,12 +87,10 @@ func main() {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				_ = authService.CleanExpiredSessions(context.Background())
+				_ = authSvc.CleanExpiredSessions(context.Background())
 			}
 		}
 	}()
-
-	// --- Start ---
 
 	go func() {
 		time.Sleep(400 * time.Millisecond)
@@ -106,8 +103,6 @@ func main() {
 			log.Fatalf("serveur: %v", err)
 		}
 	}()
-
-	// --- Graceful shutdown ---
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

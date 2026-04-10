@@ -36,7 +36,15 @@ func (m *mockUserRepo) GetByUsername(_ context.Context, username string) (*domai
 	return u, nil
 }
 func (m *mockUserRepo) Update(_ context.Context, _ *domain.User) error   { return nil }
-func (m *mockUserRepo) Delete(_ context.Context, _ int64) error          { return nil }
+func (m *mockUserRepo) Delete(_ context.Context, id int64) error {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.Status = domain.UserDisabled
+			return nil
+		}
+	}
+	return domain.ErrUserNotFound
+}
 func (m *mockUserRepo) List(_ context.Context) ([]domain.User, error)    { return nil, nil }
 func (m *mockUserRepo) UpdateLastLogin(_ context.Context, _ int64) error { return nil }
 

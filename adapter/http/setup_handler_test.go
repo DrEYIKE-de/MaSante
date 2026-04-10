@@ -29,10 +29,16 @@ func testServer(t *testing.T) *Server {
 	auditRepo := sqlite.NewAuditRepo(db)
 	hasher := adapter.BcryptHasher{}
 
+	patientRepo := sqlite.NewPatientRepo(db)
+	aptRepo := sqlite.NewAppointmentRepo(db)
+
 	authSvc := app.NewAuthService(userRepo, sessionRepo, hasher, auditRepo)
 	setupSvc := app.NewSetupService(centerRepo, userRepo, smsRepo, hasher, auditRepo)
+	patientSvc := app.NewPatientService(patientRepo, auditRepo)
+	aptSvc := app.NewAppointmentService(aptRepo, patientRepo, auditRepo)
+	userSvc := app.NewUserService(userRepo, sessionRepo, hasher, auditRepo)
 
-	return NewServer(authSvc, setupSvc)
+	return NewServer(authSvc, setupSvc, patientSvc, aptSvc, userSvc)
 }
 
 func TestSetupStatus_InitiallyFalse(t *testing.T) {
