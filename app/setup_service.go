@@ -52,13 +52,9 @@ func (s *SetupService) GetSetupStep(ctx context.Context) (int, error) {
 
 // SaveCenter handles step 1. Creates the center record.
 func (s *SetupService) SaveCenter(ctx context.Context, req domain.SetupCenterRequest) error {
-	step, err := s.center.GetSetupStep(ctx)
-	if err != nil {
-		// No center row yet — step 0, that's correct for step 1.
-		step = 0
-	}
-	if step != 0 {
-		return fmt.Errorf("%w: attendu etape 1, actuellement a %d", ErrSetupWrongStep, step)
+	step, _ := s.center.GetSetupStep(ctx)
+	if step > 1 {
+		return fmt.Errorf("%w: etape 1 deja validee", ErrSetupWrongStep)
 	}
 
 	c := &domain.Center{
@@ -71,8 +67,17 @@ func (s *SetupService) SaveCenter(ctx context.Context, req domain.SetupCenterReq
 		Longitude: req.Lng,
 		SetupStep: 1,
 	}
-	if err := s.center.Create(ctx, c); err != nil {
-		return err
+	// Use Create or Update depending on whether center exists.
+	existing, _ := s.center.Get(ctx)
+	if existing != nil {
+		c.ID = existing.ID
+		if err := s.center.Update(ctx, c); err != nil {
+			return err
+		}
+	} else {
+		if err := s.center.Create(ctx, c); err != nil {
+			return err
+		}
 	}
 	return s.center.SetSetupStep(ctx, 1)
 }
@@ -160,13 +165,13 @@ func (s *SetupService) Complete(ctx context.Context) error {
 	return s.center.CompleteSetup(ctx)
 }
 
-func (s *SetupService) requireStep(ctx context.Context, expected int) error {
+func (s *SetupService) requireStep(ctx context.Context, minStep int) error {
 	step, err := s.center.GetSetupStep(ctx)
 	if err != nil {
 		return fmt.Errorf("read setup step: %w", err)
 	}
-	if step != expected {
-		return fmt.Errorf("%w: attendu etape %d, actuellement a %d", ErrSetupWrongStep, expected+1, step)
+	if step < minStep {
+		return fmt.Errorf("%w: completez d'abord l'etape %d", ErrSetupWrongStep, minStep)
 	}
 	return nil
 }
