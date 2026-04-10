@@ -433,22 +433,169 @@ async function pageDashboard(c){
 
 // ── CALENDAR ──
 async function pageCalendar(c){
-  c.appendChild(loading());
-  const today=new Date();const mon=new Date(today);mon.setDate(today.getDate()-((today.getDay()+6)%7));
-  const ds=mon.toISOString().slice(0,10);const res=await cal.week(ds);c.textContent='';
-  c.appendChild(el('div',{class:'cal-date',text:'Semaine du '+mon.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}),style:'margin-bottom:16px'}));
-  const grid=el('div',{class:'cal-grid'});
-  const header=el('div',{class:'cal-header'});header.appendChild(el('div',{class:'cal-hcell'}));
-  ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach((d,i)=>{const dd=new Date(mon);dd.setDate(mon.getDate()+i);header.appendChild(el('div',{class:'cal-hcell'+(dd.toDateString()===today.toDateString()?' today':''),text:d+' '+dd.getDate()}))});
-  grid.appendChild(header);
-  const body=el('div',{class:'cal-body'});
-  const aptsList=res.ok?(res.data||[]):[];const byDT={};
-  aptsList.forEach(a=>{const k=(a.Date||'').slice(0,10)+'|'+(a.Time||'');if(!byDT[k])byDT[k]=[];byDT[k].push(a)});
-  for(let h=8;h<=16;h++){const time=String(h).padStart(2,'0')+':00';const row=el('div',{class:'cal-row'});row.appendChild(el('div',{class:'cal-time',text:time}));
-    for(let d=0;d<7;d++){const dd=new Date(mon);dd.setDate(mon.getDate()+d);const ds2=dd.toISOString().slice(0,10);const slot=el('div',{class:'cal-slot'});
-      (byDT[ds2+'|'+time]||[]).forEach(a=>{const sm={confirme:'c-ok',en_attente:'c-wait',manque:'c-miss',termine:'c-done'};slot.appendChild(el('div',{class:'cal-evt '+(sm[a.Status]||'c-ok'),text:(a.PatientName||'').split(' ')[0]}))});
-      row.appendChild(slot)}body.appendChild(row)}
-  grid.appendChild(body);c.appendChild(grid);
+  let viewMode='week'; // week or month
+  let refDate=new Date();
+  const today=new Date();
+  const container=el('div');c.appendChild(container);
+
+  async function render(){
+    container.textContent='';
+    // Controls.
+    const controls=el('div',{class:'cal-controls'});
+    const prevBtn=el('button',{class:'cal-nav-btn'});prevBtn.appendChild(svg('left',14));
+    prevBtn.onclick=()=>{if(viewMode==='week')refDate.setDate(refDate.getDate()-7);else refDate.setMonth(refDate.getMonth()-1);render()};
+    const nextBtn=el('button',{class:'cal-nav-btn'});nextBtn.appendChild(svg('right',14));
+    nextBtn.onclick=()=>{if(viewMode==='week')refDate.setDate(refDate.getDate()+7);else refDate.setMonth(refDate.getMonth()+1);render()};
+    const todayBtn=el('button',{class:'btn btn-sm btn-secondary',text:"Aujourd'hui",style:'width:auto;margin-left:8px'});
+    todayBtn.onclick=()=>{refDate=new Date();render()};
+    const dateLabel=el('span',{class:'cal-date'});
+    controls.appendChild(prevBtn);controls.appendChild(dateLabel);controls.appendChild(nextBtn);controls.appendChild(todayBtn);
+    // View toggle.
+    const toggle=el('div',{class:'cal-toggle'});
+    const weekBtn=el('button',{class:'cal-tbtn'+(viewMode==='week'?' active':''),text:'Semaine'});
+    weekBtn.onclick=()=>{viewMode='week';render()};
+    const monthBtn=el('button',{class:'cal-tbtn'+(viewMode==='month'?' active':''),text:'Mois'});
+    monthBtn.onclick=()=>{viewMode='month';render()};
+    toggle.appendChild(weekBtn);toggle.appendChild(monthBtn);
+    controls.appendChild(toggle);
+    container.appendChild(controls);
+
+    if(viewMode==='week') await renderWeek(dateLabel);
+    else await renderMonth(dateLabel);
+  }
+
+  async function renderWeek(dateLabel){
+    const mon=new Date(refDate);mon.setDate(refDate.getDate()-((refDate.getDay()+6)%7));
+    dateLabel.textContent='Semaine du '+mon.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    const ds=mon.toISOString().slice(0,10);
+    container.appendChild(loading());
+    const res=await cal.week(ds);
+    const ld=container.querySelector('.ms-loading');if(ld)ld.remove();
+
+    const grid=el('div',{class:'cal-grid'});
+    const header=el('div',{class:'cal-header'});header.appendChild(el('div',{class:'cal-hcell'}));
+    ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach((d,i)=>{const dd=new Date(mon);dd.setDate(mon.getDate()+i);header.appendChild(el('div',{class:'cal-hcell'+(dd.toDateString()===today.toDateString()?' today':''),text:d+' '+dd.getDate()}))});
+    grid.appendChild(header);
+
+    const body=el('div',{class:'cal-body'});
+    const aptsList=res.ok?(res.data||[]):[];const byDT={};
+    aptsList.forEach(a=>{const k=(a.Date||'').slice(0,10)+'|'+(a.Time||'');if(!byDT[k])byDT[k]=[];byDT[k].push(a)});
+    for(let h=8;h<=16;h++){const time=String(h).padStart(2,'0')+':00';const row=el('div',{class:'cal-row'});row.appendChild(el('div',{class:'cal-time',text:time}));
+      for(let d=0;d<7;d++){const dd=new Date(mon);dd.setDate(mon.getDate()+d);const ds2=dd.toISOString().slice(0,10);const slot=el('div',{class:'cal-slot'});
+        (byDT[ds2+'|'+time]||[]).forEach(a=>{const sm={confirme:'c-ok',en_attente:'c-wait',manque:'c-miss',termine:'c-done'};slot.appendChild(el('div',{class:'cal-evt '+(sm[a.Status]||'c-ok'),text:(a.PatientName||'').split(' ')[0]}))});
+        row.appendChild(slot)}body.appendChild(row)}
+    grid.appendChild(body);container.appendChild(grid);
+  }
+
+  async function renderMonth(dateLabel){
+    const year=refDate.getFullYear();const month=refDate.getMonth();
+    const monthNames=['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+    dateLabel.textContent=monthNames[month]+' '+year;
+
+    // Load all weeks of the month.
+    const firstDay=new Date(year,month,1);const lastDay=new Date(year,month+1,0);
+    const firstMon=new Date(firstDay);firstMon.setDate(firstDay.getDate()-((firstDay.getDay()+6)%7));
+    container.appendChild(loading());
+
+    // Load 5 weeks to cover the whole month.
+    const allApts=[];
+    for(let w=0;w<6;w++){
+      const weekStart=new Date(firstMon);weekStart.setDate(firstMon.getDate()+w*7);
+      if(weekStart.getMonth()>month&&weekStart.getFullYear()>=year&&w>0)break;
+      const res=await cal.week(weekStart.toISOString().slice(0,10));
+      if(res.ok&&res.data)allApts.push(...res.data);
+    }
+    const ld=container.querySelector('.ms-loading');if(ld)ld.remove();
+
+    // Count apts per day.
+    const byDay={};
+    allApts.forEach(a=>{const d=(a.Date||'').slice(0,10);if(!byDay[d])byDay[d]=[];byDay[d].push(a)});
+
+    // Build month grid.
+    const grid=el('div',{class:'card'});
+    const gridBody=el('div',{class:'card-body'});
+
+    // Header row.
+    const hdr=el('div',{class:'mcal'});
+    ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(d=>hdr.appendChild(el('div',{class:'dh',text:d})));
+
+    // Day cells.
+    const cursor=new Date(firstMon);
+    for(let row=0;row<6;row++){
+      for(let col=0;col<7;col++){
+        const d=new Date(cursor);
+        const ds=d.toISOString().slice(0,10);
+        const isCurrentMonth=d.getMonth()===month;
+        const isToday=d.toDateString()===today.toDateString();
+        const apts=byDay[ds]||[];
+
+        const cell=el('div',{class:'dc'+(isToday?' today':'')+(isCurrentMonth?'':' muted')+(apts.length?' has':''),style:'cursor:pointer;position:relative'});
+        cell.appendChild(document.createTextNode(d.getDate()));
+
+        // Tooltip with apt count.
+        if(apts.length>0&&isCurrentMonth){
+          const badge=el('div',{style:'position:absolute;top:2px;right:2px;font-size:.6rem;background:var(--primary);color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center',text:String(apts.length)});
+          cell.appendChild(badge);
+        }
+
+        // Click to see day detail.
+        if(isCurrentMonth){
+          cell.onclick=()=>showDayDetail(d,apts);
+        }
+
+        hdr.appendChild(cell);
+        cursor.setDate(cursor.getDate()+1);
+      }
+      if(cursor.getMonth()>month&&cursor.getFullYear()>=year)break;
+    }
+
+    gridBody.appendChild(hdr);
+
+    // Legend.
+    const legend=el('div',{style:'display:flex;gap:16px;margin-top:16px;font-size:.78rem;color:var(--gray-400)'});
+    [['has','Jours avec RDV'],['today','Aujourd\'hui']].forEach(([cls,lbl])=>{
+      const item=el('div',{style:'display:flex;align-items:center;gap:4px'});
+      const dot=el('div',{class:'dc '+cls,style:'width:20px;height:20px;font-size:.7rem;display:flex;align-items:center;justify-content:center',text:'8'});
+      item.appendChild(dot);item.appendChild(el('span',{text:lbl}));legend.appendChild(item)});
+    gridBody.appendChild(legend);
+
+    grid.appendChild(gridBody);container.appendChild(grid);
+  }
+
+  function showDayDetail(date,apts){
+    const content=el('div');
+    content.appendChild(el('p',{style:'font-size:.85rem;color:var(--gray-500);margin-bottom:12px',text:date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' — '+apts.length+' rendez-vous'}));
+
+    if(apts.length===0){
+      content.appendChild(empty('Aucun rendez-vous ce jour'));
+    } else {
+      apts.forEach(a=>{
+        const item=el('div',{class:'list-item'});
+        item.appendChild(el('span',{class:'time-label',text:a.Time||'—'}));
+        item.appendChild(el('div',{class:'avatar a1',text:initials(a.PatientName)}));
+        const info=el('div',{class:'item-info'});
+        info.appendChild(el('div',{class:'item-name',text:a.PatientName||'Patient'}));
+        info.appendChild(el('div',{class:'item-sub',text:fmtType(a.Type)}));
+        item.appendChild(info);
+        item.appendChild(pill(a.Status));
+        content.appendChild(item);
+      });
+    }
+
+    // Simple modal.
+    const overlay=el('div',{class:'modal-overlay open'});
+    const modal=el('div',{class:'modal open'});modal.onclick=e=>e.stopPropagation();
+    const mh=el('div',{class:'modal-head'});
+    const title=el('h3');title.appendChild(svg('calendar',18));title.appendChild(document.createTextNode(' '+date.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})));
+    mh.appendChild(title);
+    const xBtn=el('button',{class:'icon-btn'});xBtn.appendChild(svg('x'));xBtn.onclick=()=>{overlay.remove();modal.remove()};mh.appendChild(xBtn);
+    modal.appendChild(mh);
+    const mb=el('div',{class:'modal-body'});mb.appendChild(content);modal.appendChild(mb);
+    overlay.onclick=()=>{overlay.remove();modal.remove()};
+    document.body.appendChild(overlay);document.body.appendChild(modal);
+  }
+
+  render();
 }
 
 // ── NEW APPOINTMENT ──
