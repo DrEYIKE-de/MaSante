@@ -109,7 +109,13 @@ async function sendAll() {
               <button class="btn btn-sm btn-secondary" style="width:auto" @click="saveTemplate(tpl)" :disabled="savingTemplate === tpl.ID || tpl._body === tpl.Body">
                 {{ savingTemplate === tpl.ID ? 'Sauvegarde...' : 'Sauvegarder' }}
               </button>
-              <span style="font-size:.72rem;color:var(--gray-300)">Placeholders: {prenom} {date} {heure} {centre}</span>
+              <div style="font-size:.75rem;color:var(--gray-400);margin-top:6px;line-height:1.5">
+                Mots remplaces automatiquement dans le message :<br>
+                <strong>{prenom}</strong> = prenom du patient,
+                <strong>{date}</strong> = date du RDV,
+                <strong>{heure}</strong> = heure du RDV,
+                <strong>{centre}</strong> = nom du centre de sante
+              </div>
             </div>
           </div>
         </div>
