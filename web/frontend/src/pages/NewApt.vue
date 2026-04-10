@@ -16,6 +16,7 @@ const aptDate = ref('')
 const slots = ref([])
 const selectedSlot = ref('')
 const loadingSlots = ref(false)
+const notes = ref('')
 const saving = ref(false)
 const error = ref('')
 
@@ -79,6 +80,7 @@ async function submit() {
     type: aptType.value,
     date: aptDate.value,
     time: selectedSlot.value,
+    notes: notes.value,
   })
   saving.value = false
   if (!res.ok) { error.value = res.error; return }
@@ -149,11 +151,29 @@ function initials(p) { return ((p.LastName || '')[0] + (p.FirstName || '')[0]).t
           <div v-if="loadingSlots" style="font-size:.82rem;color:var(--gray-400);padding:8px 0">Chargement des creneaux...</div>
           <div v-if="slots.length" style="margin-top:12px">
             <label style="font-size:.82rem;font-weight:600;margin-bottom:8px;display:block">Creneaux disponibles</label>
-            <div style="display:flex;flex-wrap:wrap;gap:6px">
-              <button v-for="s in slots" :key="s" class="fbtn" :class="{ on: selectedSlot === s }" @click="selectedSlot = s">{{ s }}</button>
+            <div class="slots-grid">
+              <button
+                v-for="s in slots"
+                :key="s.Time"
+                class="slot"
+                :class="{ picked: selectedSlot === s.Time, off: !s.Available }"
+                :disabled="!s.Available"
+                @click="s.Available && (selectedSlot = s.Time)"
+              >{{ s.Time }}</button>
             </div>
           </div>
           <div v-if="aptDate && !loadingSlots && !slots.length" class="ms-empty" style="padding:12px 0;font-size:.82rem">Aucun creneau disponible</div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head"><h3>4. Notes</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Observations ou instructions particulieres</label>
+            <textarea class="form-input" v-model="notes" rows="3" placeholder="Ex: Patient a jeun pour bilan sanguin, apporter le carnet de sante..."></textarea>
+          </div>
         </div>
       </div>
 
