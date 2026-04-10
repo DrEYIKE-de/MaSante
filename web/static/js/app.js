@@ -187,8 +187,9 @@ async function pageSetup(c){
     if(step===1)renderStep1();else if(step===2)renderStep2();else if(step===3)renderStep3();else if(step===4)renderStep4();else renderStep5();
   }
 
-  function input(lbl,type,id,ph,full){const g=el('div',{class:'form-group'+(full?' setup-full':'')});g.appendChild(el('label',{text:lbl}));g.appendChild(el('input',{class:'form-input',type:type,id:id,placeholder:ph||''}));return g}
-  function sel(lbl,id,opts,def){const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:lbl}));const s=el('select',{class:'form-input',id:id});opts.forEach(o=>{const op=el('option',{value:o,text:o});if(o===def)op.selected=true;s.appendChild(op)});g.appendChild(s);return g}
+  const refs={};
+  function input(lbl,type,id,ph,full){const g=el('div',{class:'form-group'+(full?' setup-full':'')});g.appendChild(el('label',{text:lbl}));const inp=el('input',{class:'form-input',type:type,placeholder:ph||''});refs[id]=inp;g.appendChild(inp);return g}
+  function sel(lbl,id,opts,def){const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:lbl}));const s=el('select',{class:'form-input'});opts.forEach(o=>{const op=el('option',{value:o,text:o});if(o===def)op.selected=true;s.appendChild(op)});refs[id]=s;g.appendChild(s);return g}
 
   function renderStep1(){
     content.appendChild(el('h3',{text:'Votre etablissement'}));
@@ -248,10 +249,10 @@ async function pageSetup(c){
     ['L','M','M','J','V','S','D'].forEach((d,i)=>{const b=el('div',{class:'day-check'+(i<5?' on':''),text:d});b.onclick=()=>b.classList.toggle('on');checks.appendChild(b)});
     dg.appendChild(checks);content.appendChild(dg);
     const g=el('div',{class:'setup-grid',style:'margin-top:14px'});
-    const tg1=el('div',{class:'form-group'});tg1.appendChild(el('label',{text:'Debut'}));tg1.appendChild(el('input',{class:'form-input',type:'time',id:'s-start',value:'08:00'}));g.appendChild(tg1);
-    const tg2=el('div',{class:'form-group'});tg2.appendChild(el('label',{text:'Fin'}));tg2.appendChild(el('input',{class:'form-input',type:'time',id:'s-end',value:'16:00'}));g.appendChild(tg2);
+    const tg1=el('div',{class:'form-group'});tg1.appendChild(el('label',{text:'Debut'}));const startIn=el('input',{class:'form-input',type:'time',value:'08:00'});refs['s-start']=startIn;tg1.appendChild(startIn);g.appendChild(tg1);
+    const tg2=el('div',{class:'form-group'});tg2.appendChild(el('label',{text:'Fin'}));const endIn=el('input',{class:'form-input',type:'time',value:'16:00'});refs['s-end']=endIn;tg2.appendChild(endIn);g.appendChild(tg2);
     g.appendChild(sel('Duree creneau','s-slot',['15','30','45','60'],'30'));
-    const ng=el('div',{class:'form-group'});ng.appendChild(el('label',{text:'Max patients/jour'}));ng.appendChild(el('input',{class:'form-input',type:'number',id:'s-max',value:'40',min:'1'}));g.appendChild(ng);
+    const ng=el('div',{class:'form-group'});ng.appendChild(el('label',{text:'Max patients/jour'}));const maxIn=el('input',{class:'form-input',type:'number',value:'40',min:'1'});refs['s-max']=maxIn;ng.appendChild(maxIn);g.appendChild(ng);
     content.appendChild(g);
   }
   function renderStep4(){
@@ -282,10 +283,11 @@ async function pageSetup(c){
     s.appendChild(recap);content.appendChild(s);
   }
 
-  function v(id){const e=$('#'+id);return e?e.value.trim():''}
+  function v(id){const e=refs[id];return e?e.value.trim():''}
   async function saveStep(){
     let res;
-    if(step===1){const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};const sel=$('#s-types .type-opt.on');data.center={name:v('s-name'),type:sel?typeMap[sel.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'));if(!data.center.name||!data.center.country||!data.center.city)return'Nom, pays et ville requis';res=await setupApi.center(data.center)}
+    if(step===1){const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};const typeEl=$('#s-types .type-opt.on');
+      data.center={name:v('s-name'),type:typeEl?typeMap[typeEl.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'));if(!data.center.name||!data.center.country||!data.center.city)return'Nom, pays et ville requis';res=await setupApi.center(data.center)}
     else if(step===2){data.admin={full_name:v('s-name2'),email:v('s-email'),username:v('s-user'),password:v('s-pwd'),title:v('s-title')};if(!data.admin.full_name||!data.admin.username||!data.admin.password)return'Nom, identifiant et mot de passe requis';if(v('s-pwd')!==v('s-pwd2'))return'Les mots de passe ne correspondent pas';res=await setupApi.admin(data.admin)}
     else if(step===3){const days=[];$$('.day-check.on').forEach((_,i)=>days.push(i+1));data.schedule={consultation_days:days.join(','),start_time:v('s-start'),end_time:v('s-end'),slot_duration:parseInt(v('s-slot'))||30,max_patients_day:parseInt(v('s-max'))||40};res=await setupApi.schedule(data.schedule)}
     else if(step===4){const en=$('#s-sms-enable .type-opt.on');const enabled=en&&en.textContent.indexOf('Oui')>=0;const provMap={"Africa's Talking":'africastalking','MTN':'mtn','Orange':'orange','Twilio':'twilio','Infobip':'infobip'};data.sms={enabled:enabled,provider:enabled?(provMap[v('s-sms-prov')]||''):'',api_key:v('s-sms-key'),api_secret:v('s-sms-sec'),sender_id:v('s-sms-sender')};res=await setupApi.sms(data.sms)}
