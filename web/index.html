@@ -3,11 +3,2525 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MaSante</title>
-<link rel="stylesheet" href="/static/css/app.css">
+<title>MaSante — Plateforme de Suivi Sante</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a3a2a;
+  --primary-light: #2d5a3f;
+  --primary-muted: #3d7a5a;
+  --primary-subtle: #e9f0ec;
+  --primary-bg: #f4f7f5;
+
+  --accent: #c4956a;
+  --accent-light: #d4aa82;
+  --accent-bg: #faf6f2;
+
+  --gray-950: #0f1113;
+  --gray-900: #1a1d21;
+  --gray-800: #2d3139;
+  --gray-700: #3d4350;
+  --gray-600: #555d6e;
+  --gray-500: #6b7588;
+  --gray-400: #8b95a5;
+  --gray-300: #b0b8c4;
+  --gray-200: #d1d6dd;
+  --gray-100: #e8ebef;
+  --gray-50: #f3f4f6;
+  --gray-25: #f9fafb;
+  --white: #ffffff;
+
+  --success: #2d7a4f;
+  --success-bg: #edf7f1;
+  --warning: #b8860b;
+  --warning-bg: #fdf8ee;
+  --danger: #a63d3d;
+  --danger-bg: #fdf0f0;
+  --info: #3d6b8a;
+  --info-bg: #eef5fa;
+
+  --sidebar-w: 256px;
+  --header-h: 60px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.05);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.1);
+  --ease: .2s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  overflow: hidden;
+  height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; }
+
+/* ── ICONS (inline SVG via CSS) ── */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-sm svg { width: 16px; height: 16px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+
+/* ════════════════════════════════
+   LOGIN
+   ════════════════════════════════ */
+.login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex;
+  transition: opacity .5s ease, transform .5s ease;
+}
+.login-screen.hidden { opacity: 0; transform: scale(1.02); pointer-events: none; }
+
+.login-left {
+  flex: 1;
+  background: var(--primary);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  position: relative; overflow: hidden;
+}
+.login-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(196,149,106,.08) 0%, transparent 50%);
+}
+.login-left::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+}
+
+.login-brand { position: relative; z-index: 1; text-align: center; color: #fff; }
+.login-logo {
+  width: 80px; height: 80px;
+  border: 2px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 28px;
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,.06);
+}
+.login-logo svg { width: 36px; height: 36px; stroke: rgba(255,255,255,.85); fill: none; stroke-width: 1.5; }
+.login-brand h1 { font-size: 2.8rem; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 8px; }
+.login-brand p { font-size: 1rem; color: rgba(255,255,255,.5); font-weight: 300; letter-spacing: .3px; }
+
+.login-features {
+  position: relative; z-index: 1;
+  margin-top: 64px; display: flex; gap: 48px;
+}
+.login-feature { text-align: center; color: rgba(255,255,255,.45); }
+.login-feature .feat-icon {
+  width: 44px; height: 44px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 10px;
+}
+.login-feature .feat-icon svg { width: 20px; height: 20px; stroke: rgba(255,255,255,.5); fill: none; stroke-width: 1.5; }
+.login-feature span { font-size: .82rem; font-weight: 500; }
+
+.login-right {
+  width: 460px; background: var(--white);
+  display: flex; flex-direction: column;
+  justify-content: center; padding: 56px;
+}
+.login-right h2 { font-size: 1.7rem; margin-bottom: 6px; color: var(--gray-900); }
+.login-right .subtitle { color: var(--gray-400); margin-bottom: 32px; font-size: .9rem; }
+
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.form-input {
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: .95rem;
+  background: var(--white); color: var(--gray-900);
+  transition: var(--ease); outline: none;
+}
+.form-input:focus { border-color: var(--primary-muted); box-shadow: 0 0 0 3px rgba(45,90,63,.08); }
+select.form-input { cursor: pointer; }
+textarea.form-input { resize: vertical; min-height: 80px; }
+
+.pin-group { display: flex; gap: 10px; justify-content: center; margin: 18px 0; }
+.pin-box {
+  width: 52px; height: 60px; text-align: center;
+  font-size: 1.4rem; font-weight: 700;
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+  background: var(--gray-25); color: var(--gray-900);
+  outline: none; transition: var(--ease);
+}
+.pin-box:focus { border-color: var(--primary-muted); background: var(--white); box-shadow: 0 0 0 3px rgba(45,90,63,.08); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 20px; border: none; border-radius: var(--radius);
+  font-family: inherit; font-size: .9rem; font-weight: 600;
+  cursor: pointer; transition: var(--ease);
+}
+.btn-primary { background: var(--primary); color: #fff; width: 100%; }
+.btn-primary:hover { background: var(--primary-light); box-shadow: var(--shadow-sm); }
+.btn-secondary {
+  background: var(--white); color: var(--gray-700); width: 100%;
+  border: 1.5px solid var(--gray-200);
+}
+.btn-secondary:hover { border-color: var(--gray-300); background: var(--gray-25); }
+.btn-sm { padding: 7px 14px; font-size: .8rem; white-space: nowrap; }
+.btn-ghost { background: none; border: none; color: var(--gray-500); padding: 6px 10px; }
+.btn-ghost:hover { color: var(--primary); background: var(--primary-subtle); }
+
+.login-or {
+  display: flex; align-items: center; gap: 14px;
+  margin: 20px 0; color: var(--gray-300); font-size: .8rem;
+}
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--gray-100); }
+
+/* ════════════════════════════════
+   APP LAYOUT
+   ════════════════════════════════ */
+.app { display: flex; height: 100vh; opacity: 0; transition: opacity .5s ease .2s; }
+.app.visible { opacity: 1; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w); background: var(--primary);
+  display: flex; flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,.06);
+}
+
+.sb-brand {
+  height: var(--header-h);
+  padding: 0 20px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.sb-logo {
+  width: 34px; height: 34px;
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sb-logo svg { width: 18px; height: 18px; stroke: rgba(255,255,255,.7); fill: none; stroke-width: 1.5; }
+.sb-brand-text h3 { color: #fff; font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px; }
+.sb-brand-text span { color: rgba(255,255,255,.35); font-size: .7rem; font-weight: 400; }
+
+.sb-nav { flex: 1; padding: 20px 12px; overflow-y: auto; }
+.sb-section { margin-bottom: 28px; }
+.sb-section-label {
+  font-size: .62rem; text-transform: uppercase; letter-spacing: 1.5px;
+  color: rgba(255,255,255,.2); padding: 0 12px; margin-bottom: 8px; font-weight: 600;
+}
+.sb-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 8px;
+  color: rgba(255,255,255,.5); cursor: pointer;
+  transition: var(--ease); font-size: .86rem; font-weight: 500;
+  position: relative; margin-bottom: 2px;
+}
+.sb-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.75); }
+.sb-item.active { background: rgba(255,255,255,.1); color: #fff; }
+.sb-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; background: var(--accent); border-radius: 0 3px 3px 0;
+}
+.sb-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.sb-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.6);
+  font-size: .68rem; font-weight: 600;
+  padding: 2px 7px; border-radius: 5px;
+}
+
+.sb-user {
+  padding: 16px 18px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.sb-avatar {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: var(--accent); opacity: .8;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: .75rem;
+}
+.sb-user-info .name { color: rgba(255,255,255,.85); font-size: .82rem; font-weight: 600; }
+.sb-user-info .role { color: rgba(255,255,255,.35); font-size: .7rem; }
+
+/* ── Main ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+  height: var(--header-h); background: var(--white);
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px; flex-shrink: 0;
+}
+.topbar-title { font-size: 1.15rem; font-weight: 600; color: var(--gray-900); }
+.topbar-search {
+  flex: 1; max-width: 360px; position: relative; margin-left: 20px;
+}
+.topbar-search input {
+  width: 100%; padding: 8px 14px 8px 36px;
+  border: 1.5px solid var(--gray-100); border-radius: var(--radius);
+  font-family: inherit; font-size: .85rem;
+  background: var(--gray-25); color: var(--gray-900);
+  outline: none; transition: var(--ease);
+}
+.topbar-search input:focus { border-color: var(--primary-muted); background: var(--white); }
+.topbar-search svg {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; stroke: var(--gray-300); fill: none; stroke-width: 1.5;
+}
+.topbar-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.topbar-badge {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 6px;
+  font-size: .75rem; font-weight: 600;
+}
+.topbar-badge.online { background: var(--success-bg); color: var(--success); }
+.topbar-badge.offline { background: var(--warning-bg); color: var(--warning); }
+.topbar-badge .bdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.topbar-badge.offline .bdot { animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: var(--radius);
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-400); transition: var(--ease);
+  position: relative;
+}
+.icon-btn:hover { background: var(--gray-50); color: var(--gray-600); }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.icon-btn .ndot {
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--danger); border: 1.5px solid var(--white);
+}
+
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ── Screens ── */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Cards ── */
+.card {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100);
+  overflow: hidden;
+}
+.card-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-50);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-head h3 { font-size: .95rem; color: var(--gray-900); display: flex; align-items: center; gap: 8px; }
+.card-head h3 svg { width: 18px; height: 18px; stroke: var(--gray-400); fill: none; stroke-width: 1.5; }
+.card-link { font-size: .78rem; color: var(--primary-muted); font-weight: 600; cursor: pointer; transition: var(--ease); text-decoration: none; }
+.card-link:hover { color: var(--primary); }
+.card-body { padding: 16px 20px; }
+
+/* ── Stat cards ── */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.stat {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100);
+  padding: 20px; transition: var(--ease);
+}
+.stat:hover { box-shadow: var(--shadow-sm); }
+.stat-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.stat-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.stat-icon.green { background: var(--primary-subtle); color: var(--primary-muted); }
+.stat-icon.blue { background: var(--info-bg); color: var(--info); }
+.stat-icon.amber { background: var(--warning-bg); color: var(--warning); }
+.stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+.stat-val { font-family: 'Source Serif 4',serif; font-size: 1.85rem; font-weight: 700; color: var(--gray-900); line-height: 1; }
+.stat-label { font-size: .8rem; color: var(--gray-400); margin-top: 4px; font-weight: 500; }
+.stat-trend { font-size: .75rem; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 3px; }
+.stat-trend svg { width: 14px; height: 14px; fill: none; stroke-width: 1.5; }
+.stat-trend.up { color: var(--success); }
+.stat-trend.down { color: var(--danger); }
+
+/* ── Grid ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-2-wide { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ── List items ── */
+.list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--gray-50);
+  min-width: 0;
+}
+.list-item:last-child { border-bottom: none; }
+.list-item .btn { flex-shrink: 0; width: auto; }
+
+.avatar {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--white); font-weight: 700; font-size: .72rem;
+  flex-shrink: 0;
+}
+.avatar.a1 { background: var(--primary-muted); }
+.avatar.a2 { background: var(--accent); }
+.avatar.a3 { background: var(--gray-600); }
+.avatar.a4 { background: var(--info); }
+.avatar.a5 { background: var(--warning); }
+.avatar.a6 { background: var(--primary-light); }
+.avatar.lg { width: 56px; height: 56px; border-radius: 14px; font-size: 1rem; }
+
+.item-info { flex: 1; min-width: 0; overflow: hidden; }
+.item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-name { font-weight: 600; font-size: .88rem; color: var(--gray-900); }
+.item-sub { font-size: .78rem; color: var(--gray-400); }
+
+.time-label { font-size: .82rem; font-weight: 600; color: var(--gray-400); min-width: 44px; }
+
+/* ── Pills ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 5px;
+  font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
+}
+.pill-success { background: var(--success-bg); color: var(--success); }
+.pill-warning { background: var(--warning-bg); color: var(--warning); }
+.pill-danger { background: var(--danger-bg); color: var(--danger); }
+.pill-info { background: var(--info-bg); color: var(--info); }
+.pill-neutral { background: var(--gray-50); color: var(--gray-500); }
+
+/* ── Risk dots ── */
+.risk { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 600; }
+.risk-dot { width: 7px; height: 7px; border-radius: 50%; }
+.risk.low .risk-dot { background: var(--success); }
+.risk.low { color: var(--success); }
+.risk.med .risk-dot { background: var(--warning); }
+.risk.med { color: var(--warning); }
+.risk.high .risk-dot { background: var(--danger); }
+.risk.high { color: var(--danger); }
+
+/* ── Overdue ── */
+.overdue-avatar {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--danger-bg); color: var(--danger);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .72rem;
+}
+.overdue-days { font-size: .78rem; color: var(--danger); font-weight: 600; }
+
+/* ── Mini calendar ── */
+.mcal { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; text-align: center; }
+.mcal .dh { font-size: .68rem; font-weight: 600; color: var(--gray-300); padding: 6px 0; text-transform: uppercase; }
+.mcal .dc {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; font-size: .8rem; font-weight: 500; color: var(--gray-500);
+  cursor: pointer; transition: var(--ease); position: relative;
+}
+.mcal .dc:hover { background: var(--primary-subtle); }
+.mcal .dc.today { background: var(--primary); color: #fff; font-weight: 700; }
+.mcal .dc.muted { color: var(--gray-200); }
+.mcal .dc.has::after {
+  content: ''; position: absolute; bottom: 3px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+}
+.mcal .dc.today.has::after { background: rgba(255,255,255,.6); }
+
+/* ── Progress bars ── */
+.pbar-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.pbar-label { flex: 0 0 100px; font-size: .85rem; font-weight: 500; color: var(--gray-600); }
+.pbar-val { flex: 0 0 30px; font-weight: 700; font-size: .88rem; text-align: right; }
+.pbar-track { flex: 1; height: 6px; background: var(--gray-50); border-radius: 3px; overflow: hidden; }
+.pbar-fill { height: 100%; border-radius: 3px; }
+
+/* ── Calendar ── */
+.cal-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.cal-nav-btn {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid var(--gray-200); background: var(--white);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--gray-500); transition: var(--ease);
+}
+.cal-nav-btn:hover { border-color: var(--primary-muted); color: var(--primary); }
+.cal-date { font-family: 'Source Serif 4',serif; font-size: 1.05rem; font-weight: 600; color: var(--gray-900); min-width: 180px; }
+.cal-toggle { display: flex; background: var(--gray-50); border-radius: 6px; padding: 2px; margin-left: auto; }
+.cal-tbtn {
+  padding: 6px 16px; border: none; border-radius: 5px;
+  font-family: inherit; font-size: .78rem; font-weight: 600;
+  cursor: pointer; transition: var(--ease);
+  background: transparent; color: var(--gray-400);
+}
+.cal-tbtn.active { background: var(--white); color: var(--gray-800); box-shadow: var(--shadow-xs); }
+
+.cal-grid {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100); overflow: hidden;
+}
+.cal-header { display: grid; grid-template-columns: 60px repeat(7,1fr); border-bottom: 1px solid var(--gray-100); }
+.cal-hcell {
+  padding: 12px 6px; text-align: center;
+  font-size: .75rem; font-weight: 600; color: var(--gray-400); text-transform: uppercase;
+}
+.cal-hcell.today { color: var(--primary); }
+.cal-body { max-height: 480px; overflow-y: auto; }
+.cal-row { display: grid; grid-template-columns: 60px repeat(7,1fr); min-height: 56px; border-bottom: 1px solid var(--gray-50); }
+.cal-time { padding: 6px; font-size: .72rem; color: var(--gray-300); font-weight: 500; text-align: right; padding-right: 10px; }
+.cal-slot { border-left: 1px solid var(--gray-50); padding: 3px; }
+.cal-evt {
+  padding: 4px 8px; border-radius: 4px;
+  font-size: .72rem; font-weight: 600; margin-bottom: 2px;
+  cursor: pointer; transition: var(--ease);
+  border-left: 2px solid transparent;
+}
+.cal-evt:hover { opacity: .85; }
+.cal-evt { cursor: pointer; }
+.cal-evt.c-ok { background: var(--success-bg); color: var(--success); border-left-color: var(--success); }
+.cal-evt.c-wait { background: var(--warning-bg); color: var(--warning); border-left-color: var(--warning); }
+.cal-evt.c-miss { background: var(--danger-bg); color: var(--danger); border-left-color: var(--danger); }
+.cal-evt.c-done { background: var(--info-bg); color: var(--info); border-left-color: var(--info); }
+
+/* ── New Appointment ── */
+.apt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.search-box { position: relative; margin-bottom: 16px; }
+.search-box input {
+  width: 100%; padding: 11px 14px 11px 38px;
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+  font-family: inherit; font-size: .9rem; background: var(--gray-25);
+  outline: none; transition: var(--ease);
+}
+.search-box input:focus { border-color: var(--primary-muted); background: var(--white); }
+.search-box svg {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; stroke: var(--gray-300); fill: none; stroke-width: 1.5;
+}
+
+.patient-card {
+  background: var(--gray-25); border: 1.5px solid var(--gray-100);
+  border-radius: var(--radius-lg); padding: 18px; margin-bottom: 16px;
+}
+.pc-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.pc-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pc-d-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-300); font-weight: 600; }
+.pc-d-val { font-size: .85rem; font-weight: 600; color: var(--gray-700); }
+
+.slots-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-top: 10px; }
+.slot {
+  padding: 9px; text-align: center;
+  border: 1.5px solid var(--gray-200); border-radius: 6px;
+  font-size: .82rem; font-weight: 600; color: var(--gray-500);
+  cursor: pointer; transition: var(--ease);
+}
+.slot:hover { border-color: var(--primary-muted); background: var(--primary-subtle); }
+.slot.picked { background: var(--primary); color: #fff; border-color: var(--primary); }
+.slot.off { opacity: .3; cursor: not-allowed; text-decoration: line-through; }
+
+.remind-opts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.r-opt {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius); cursor: pointer;
+  font-size: .82rem; font-weight: 500; color: var(--gray-500);
+  transition: var(--ease);
+}
+.r-opt:hover { border-color: var(--primary-muted); }
+.r-opt.on { border-color: var(--primary); background: var(--primary-subtle); color: var(--primary); }
+.r-opt svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+.summary-card {
+  background: var(--primary-bg); border: 1.5px solid var(--primary-subtle);
+  border-radius: var(--radius-lg); padding: 22px; margin-top: 16px;
+}
+.summary-card h3 { font-size: .95rem; color: var(--gray-900); margin-bottom: 14px; }
+.sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sc-label { font-size: .7rem; text-transform: uppercase; color: var(--gray-300); font-weight: 600; margin-bottom: 1px; }
+.sc-val { font-size: .85rem; font-weight: 600; color: var(--gray-800); }
+
+/* ── Patient table ── */
+.filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.fbtn {
+  padding: 6px 14px; border: 1px solid var(--gray-200); border-radius: 20px;
+  background: var(--white); font-family: inherit; font-size: .8rem;
+  font-weight: 600; color: var(--gray-400); cursor: pointer; transition: var(--ease);
+}
+.fbtn:hover { border-color: var(--gray-300); }
+.fbtn.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.ptable { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-100); overflow: hidden; }
+.pt-head {
+  display: grid; grid-template-columns: 44px 2fr 1fr 1fr 1fr 1fr 100px;
+  padding: 12px 20px; background: var(--gray-25); border-bottom: 1px solid var(--gray-100);
+  font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-400);
+}
+.pt-row {
+  display: grid; grid-template-columns: 44px 2fr 1fr 1fr 1fr 1fr 100px;
+  padding: 11px 20px; align-items: center;
+  border-bottom: 1px solid var(--gray-50);
+  cursor: pointer; transition: var(--ease);
+}
+.pt-row:hover { background: var(--gray-25); }
+.pt-row:last-child { border-bottom: none; }
+.pt-name { font-weight: 600; font-size: .88rem; }
+.pt-code { font-size: .72rem; color: var(--gray-400); }
+.pt-cell { font-size: .82rem; color: var(--gray-500); }
+.pt-acts { display: flex; gap: 4px; }
+
+/* ── Patient file ── */
+.pf-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+.pf-side { display: flex; flex-direction: column; gap: 16px; }
+.pf-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100); padding: 24px; text-align: center;
+}
+.pf-avatar {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--primary-muted);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 1.3rem;
+  margin: 0 auto 14px;
+}
+.pf-name { font-size: 1.1rem; font-weight: 700; color: var(--gray-900); }
+.pf-id { font-size: .8rem; color: var(--gray-400); margin-bottom: 10px; }
+.pf-details { text-align: left; border-top: 1px solid var(--gray-50); padding-top: 14px; }
+.pf-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: .82rem; }
+.pf-row .lbl { color: var(--gray-400); }
+.pf-row .val { font-weight: 600; color: var(--gray-700); }
+
+.risk-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100); padding: 20px;
+}
+.risk-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.risk-circle {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .95rem;
+  background: var(--success-bg); color: var(--success); border: 2px solid var(--success);
+}
+.rf-list { list-style: none; }
+.rf-list li { padding: 5px 0; font-size: .8rem; color: var(--gray-500); display: flex; align-items: center; gap: 8px; }
+.rf-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+.pf-main { display: flex; flex-direction: column; gap: 16px; }
+
+/* Timeline */
+.tl { position: relative; padding-left: 24px; }
+.tl::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 1.5px; background: var(--gray-100); }
+.tl-item { position: relative; padding-bottom: 20px; }
+.tl-item::before {
+  content: ''; position: absolute; left: -19px; top: 5px;
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 2px solid var(--primary-muted); background: var(--white);
+}
+.tl-item.missed::before { border-color: var(--danger); }
+.tl-item.current::before { background: var(--primary-muted); }
+.tl-date { font-size: .75rem; color: var(--gray-400); font-weight: 600; margin-bottom: 3px; }
+.tl-content { background: var(--gray-25); padding: 12px 16px; border-radius: var(--radius); }
+.tl-type { font-weight: 600; font-size: .85rem; color: var(--gray-800); }
+.tl-note { color: var(--gray-400); margin-top: 3px; font-size: .8rem; }
+
+/* ── ASC ── */
+.asc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.visit-card {
+  background: var(--white); border-radius: var(--radius);
+  border: 1px solid var(--gray-100);
+  padding: 16px; margin-bottom: 10px;
+  display: flex; gap: 12px; align-items: flex-start;
+  transition: var(--ease); cursor: pointer;
+}
+.visit-card:hover { box-shadow: var(--shadow-sm); }
+.v-bar { width: 3px; min-height: 44px; border-radius: 3px; flex-shrink: 0; }
+.v-bar.v-high { background: var(--danger); }
+.v-bar.v-med { background: var(--warning); }
+.v-bar.v-low { background: var(--success); }
+.v-info { flex: 1; }
+.v-name { font-weight: 600; font-size: .9rem; margin-bottom: 3px; }
+.v-zone { font-size: .8rem; color: var(--gray-400); }
+.v-reason { font-size: .8rem; color: var(--warning); margin-top: 4px; font-weight: 500; }
+.v-acts { display: flex; flex-direction: column; gap: 4px; }
+
+.report-form {
+  background: var(--white); border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100); padding: 22px;
+}
+.report-form h3 { margin-bottom: 16px; font-size: .95rem; }
+
+.radio-row { display: flex; gap: 8px; margin: 6px 0 14px; }
+.radio-btn {
+  padding: 8px 16px; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius); cursor: pointer;
+  font-size: .82rem; font-weight: 500; transition: var(--ease); color: var(--gray-500);
+}
+.radio-btn:hover { border-color: var(--gray-300); }
+.radio-btn.on { border-color: var(--primary); background: var(--primary-subtle); color: var(--primary); font-weight: 600; }
+
+.zone-map {
+  background: var(--gray-25); border-radius: var(--radius-lg);
+  height: 260px; position: relative; overflow: hidden;
+  border: 1px solid var(--gray-100); margin-top: 16px;
+}
+.map-dot {
+  position: absolute; width: 12px; height: 12px;
+  border-radius: 50%; cursor: pointer; transition: var(--ease);
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+.map-dot:hover { transform: scale(1.4); }
+.map-dot.md-red { background: var(--danger); }
+.map-dot.md-amber { background: var(--warning); }
+.map-dot.md-green { background: var(--success); }
+.map-legend {
+  position: absolute; bottom: 12px; left: 12px;
+  display: flex; gap: 12px; font-size: .72rem; color: var(--gray-400); font-weight: 500;
+}
+.map-legend span { display: flex; align-items: center; gap: 4px; }
+.map-legend .ml-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── Reminders ── */
+.rem-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.rem-stat {
+  background: var(--white); border-radius: var(--radius);
+  border: 1px solid var(--gray-100);
+  padding: 16px; text-align: center;
+}
+.rem-stat-val { font-family: 'Source Serif 4',serif; font-size: 1.4rem; font-weight: 700; }
+.rem-stat-label { font-size: .75rem; color: var(--gray-400); margin-top: 3px; }
+
+.rq-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-50); }
+.rq-item:last-child { border-bottom: none; }
+.rq-ch {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.rq-ch svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.rq-ch.ch-sms { background: var(--info-bg); color: var(--info); }
+.rq-ch.ch-wa { background: var(--success-bg); color: var(--success); }
+.rq-ch.ch-voice { background: var(--warning-bg); color: var(--warning); }
+.rq-info { flex: 1; }
+.rq-name { font-weight: 600; font-size: .85rem; }
+.rq-sched { font-size: .75rem; color: var(--gray-400); }
+
+.tpl-editor { background: var(--gray-25); border-radius: var(--radius); padding: 14px; margin-top: 12px; }
+.tpl-editor textarea {
+  width: 100%; height: 90px; border: 1.5px solid var(--gray-200);
+  border-radius: 6px; padding: 10px; font-family: inherit; font-size: .85rem;
+  resize: none; outline: none; transition: var(--ease);
+}
+.tpl-editor textarea:focus { border-color: var(--primary-muted); }
+.tpl-tags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+.tpl-tag {
+  padding: 3px 8px; background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: 4px; font-size: .72rem; font-weight: 500; color: var(--gray-500); cursor: pointer;
+}
+
+.toggle-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-50);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-name { font-weight: 600; font-size: .85rem; }
+.toggle-desc { font-size: .75rem; color: var(--gray-400); }
+.toggle-sw {
+  width: 40px; height: 22px; border-radius: 11px;
+  position: relative; cursor: pointer; transition: var(--ease);
+}
+.toggle-sw.on { background: var(--primary-muted); }
+.toggle-sw.off { background: var(--gray-200); }
+.toggle-knob {
+  width: 18px; height: 18px; background: #fff; border-radius: 50%;
+  position: absolute; top: 2px; transition: var(--ease);
+  box-shadow: var(--shadow-xs);
+}
+.toggle-sw.on .toggle-knob { right: 2px; }
+.toggle-sw.off .toggle-knob { left: 2px; }
+
+/* ── Notification panel ── */
+.notif-panel {
+  position: fixed; top: 0; right: -380px; width: 380px; height: 100vh;
+  background: var(--white); border-left: 1px solid var(--gray-100);
+  z-index: 1000; transition: right .3s ease;
+  display: flex; flex-direction: column;
+}
+.notif-panel.open { right: 0; box-shadow: -10px 0 40px rgba(0,0,0,.08); }
+.notif-head {
+  padding: 18px 20px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.notif-head h3 { font-size: 1rem; }
+.notif-body { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.notif-item {
+  padding: 14px 0; border-bottom: 1px solid var(--gray-50);
+  display: flex; gap: 12px;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.notif-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.notif-icon.ni-warn { background: var(--warning-bg); color: var(--warning); }
+.notif-icon.ni-danger { background: var(--danger-bg); color: var(--danger); }
+.notif-icon.ni-info { background: var(--info-bg); color: var(--info); }
+.notif-icon.ni-ok { background: var(--success-bg); color: var(--success); }
+.notif-text { font-size: .82rem; color: var(--gray-600); line-height: 1.4; }
+.notif-text strong { color: var(--gray-900); }
+.notif-time { font-size: .7rem; color: var(--gray-300); margin-top: 3px; }
+.notif-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.15);
+  z-index: 999; opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.notif-overlay.open { opacity: 1; pointer-events: auto; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 3px; }
+
+/* ── Animation ── */
+.anim-in > * { animation: slideUp .4s ease forwards; opacity: 0; }
+.anim-in > *:nth-child(1){animation-delay:.03s}
+.anim-in > *:nth-child(2){animation-delay:.06s}
+.anim-in > *:nth-child(3){animation-delay:.09s}
+.anim-in > *:nth-child(4){animation-delay:.12s}
+@keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Setup Wizard ── */
+.setup-screen {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--white);
+  display: flex; flex-direction: column;
+  transition: opacity .5s ease;
+}
+.setup-screen.hidden { opacity: 0; pointer-events: none; }
+
+.setup-header {
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; gap: 14px;
+}
+.setup-header .sh-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+}
+.setup-header .sh-logo svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 1.5; }
+.setup-header h2 { font-size: 1.1rem; color: var(--gray-900); letter-spacing: -.3px; }
+.setup-header .sh-step { margin-left: auto; font-size: .82rem; color: var(--gray-400); font-weight: 500; }
+
+.setup-progress {
+  height: 3px; background: var(--gray-100);
+}
+.setup-progress-fill {
+  height: 100%; background: var(--primary); transition: width .4s ease;
+}
+
+.setup-body {
+  flex: 1; display: flex; justify-content: center; align-items: flex-start;
+  padding: 40px; overflow-y: auto;
+}
+.setup-content {
+  width: 100%; max-width: 580px;
+}
+.setup-content h3 {
+  font-size: 1.5rem; color: var(--gray-900); margin-bottom: 6px;
+}
+.setup-content .setup-desc {
+  font-size: .9rem; color: var(--gray-400); margin-bottom: 28px; line-height: 1.5;
+}
+
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.setup-grid .form-group { margin-bottom: 0; }
+.setup-full { grid-column: 1 / -1; }
+
+.setup-footer {
+  padding: 16px 40px;
+  border-top: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.setup-footer .btn { width: auto; }
+
+.setup-step { display: none; }
+.setup-step.active { display: block; animation: fadeUp .3s ease; }
+
+/* Steps indicator */
+.steps-bar { display: flex; gap: 6px; align-items: center; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gray-200); transition: var(--ease);
+}
+.step-dot.done { background: var(--primary); }
+.step-dot.current { background: var(--primary); width: 24px; border-radius: 4px; }
+.step-line { width: 16px; height: 1px; background: var(--gray-200); }
+
+/* Checkbox row for days */
+.day-checks { display: flex; gap: 6px; margin-top: 6px; }
+.day-check {
+  width: 40px; height: 40px; border-radius: var(--radius);
+  border: 1.5px solid var(--gray-200); display: flex; align-items: center; justify-content: center;
+  font-size: .78rem; font-weight: 600; color: var(--gray-400);
+  cursor: pointer; transition: var(--ease);
+}
+.day-check.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* Type selector */
+.type-options { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.type-opt {
+  padding: 10px 18px; border: 1.5px solid var(--gray-200); border-radius: var(--radius);
+  font-size: .85rem; font-weight: 500; color: var(--gray-500);
+  cursor: pointer; transition: var(--ease);
+}
+.type-opt:hover { border-color: var(--gray-300); }
+.type-opt.on { border-color: var(--primary); background: var(--primary-subtle); color: var(--primary); font-weight: 600; }
+
+/* Success state */
+.setup-success { text-align: center; padding: 40px 0; }
+.setup-success .success-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--success-bg); color: var(--success);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.setup-success .success-icon svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.setup-success h3 { margin-bottom: 10px; }
+.setup-success p { color: var(--gray-400); font-size: .9rem; line-height: 1.5; }
+.setup-recap {
+  text-align: left; background: var(--gray-25); border-radius: var(--radius-lg);
+  padding: 20px; margin: 24px 0; border: 1px solid var(--gray-100);
+}
+.setup-recap .sr-row {
+  display: flex; justify-content: space-between; padding: 6px 0;
+  font-size: .85rem; border-bottom: 1px solid var(--gray-50);
+}
+.setup-recap .sr-row:last-child { border-bottom: none; }
+.setup-recap .sr-label { color: var(--gray-400); }
+.setup-recap .sr-val { font-weight: 600; color: var(--gray-800); }
+
+/* Password strength */
+.pw-strength { display: flex; gap: 4px; margin-top: 6px; }
+.pw-bar { flex: 1; height: 3px; border-radius: 2px; background: var(--gray-100); }
+.pw-bar.filled { background: var(--success); }
+
+/* SMS Provider cards */
+.sms-provider {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius); cursor: pointer;
+  transition: var(--ease);
+}
+.sms-provider:hover { border-color: var(--gray-300); background: var(--gray-25); }
+.sms-provider.selected { border-color: var(--primary); background: var(--primary-subtle); }
+.sp-radio {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--gray-300); flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--ease);
+}
+.sms-provider.selected .sp-radio { border-color: var(--primary); }
+.sms-provider.selected .sp-radio::after {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--primary);
+}
+.sp-info { flex: 1; }
+.sp-name { font-weight: 600; font-size: .9rem; color: var(--gray-800); margin-bottom: 2px; }
+.sp-desc { font-size: .78rem; color: var(--gray-400); line-height: 1.4; }
+.sp-countries { font-size: .72rem; color: var(--gray-300); margin-top: 4px; font-style: italic; }
+.sp-link {
+  font-size: .78rem; font-weight: 600; color: var(--primary-muted);
+  white-space: nowrap; flex-shrink: 0; cursor: pointer;
+  text-decoration: none; transition: var(--ease);
+  align-self: center;
+}
+.sp-link:hover { color: var(--primary); text-decoration: underline; }
+
+/* Help center */
+.help-card { cursor: pointer; transition: var(--ease); }
+.help-card:hover { box-shadow: var(--shadow-sm); }
+.help-card.open .help-chevron { transform: rotate(180deg); }
+
+.help-faq { padding: 12px 0; border-bottom: 1px solid var(--gray-50); cursor: pointer; }
+.help-faq:last-child { border-bottom: none; }
+.faq-q {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .88rem; font-weight: 600; color: var(--gray-700);
+}
+.faq-q svg { flex-shrink: 0; transition: var(--ease); }
+.help-faq.open .faq-q svg { transform: rotate(180deg); }
+.faq-a {
+  display: none; padding-top: 8px;
+  font-size: .82rem; color: var(--gray-500); line-height: 1.6;
+}
+.help-faq.open .faq-a { display: block; }
+</style>
 </head>
 <body>
-<div id="app"></div>
-<script type="module" src="/static/js/app.js"></script>
+
+<!-- SVG sprite (hidden) -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m10 22 1-5-3-3V9l4-1 3 3 3 1"/><path d="m7 13 1.5 5L13 22"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></symbol>
+  <symbol id="i-fingerprint" viewBox="0 0 24 24"><path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"/><path d="M5 19.5C5.5 18 6 15 6 12c0-3.5 2.5-6 6-6 3 0 5.5 2 6 5"/><path d="M12 12v4c0 2.5-.5 4-2 6"/><path d="M18 12c0 4-1 8-4 12"/><path d="M12 12c0 5-1 8-3.5 12"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  <symbol id="i-chevrons-right" viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
+</svg>
+
+<!-- ════════════════════════════════
+     SETUP WIZARD (premier demarrage)
+     ════════════════════════════════ -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-header">
+    <div class="sh-logo"><svg><use href="#i-leaf"/></svg></div>
+    <h2>Configuration de MaSante</h2>
+    <span class="sh-step" id="stepLabel">Etape 1 sur 5</span>
+  </div>
+  <div class="setup-progress"><div class="setup-progress-fill" id="progressFill" style="width:20%"></div></div>
+
+  <div class="setup-body">
+    <div class="setup-content">
+
+      <!-- STEP 1: Etablissement -->
+      <div class="setup-step active" id="wiz-1">
+        <h3>Votre etablissement</h3>
+        <p class="setup-desc">Ces informations identifient votre centre de sante dans le systeme. Elles apparaitront dans les rapports et les communications.</p>
+        <div class="setup-grid">
+          <div class="form-group setup-full"><label>Nom de l'etablissement</label><input class="form-input" id="setupName" type="text" placeholder="Ex: Hopital Laquintinie" value="Hopital Laquintinie"></div>
+          <div class="form-group"><label>Type d'etablissement</label>
+            <div class="type-options">
+              <div class="type-opt on" onclick="pickType(this)">Hopital public</div>
+              <div class="type-opt" onclick="pickType(this)">Centre de sante</div>
+              <div class="type-opt" onclick="pickType(this)">Clinique privee</div>
+            </div>
+          </div>
+          <div class="form-group"><label>Pays</label><select class="form-input"><option>Cameroun</option><option>Cote d'Ivoire</option><option>RD Congo</option><option>Senegal</option><option>Tchad</option><option>Gabon</option><option>Congo</option><option>Centrafrique</option><option>Burkina Faso</option><option>Mali</option><option>Niger</option><option>Guinee</option><option>Togo</option><option>Benin</option><option>Rwanda</option><option>Burundi</option><option>Madagascar</option></select></div>
+          <div class="form-group"><label>Ville</label><input class="form-input" type="text" placeholder="Ex: Douala" value="Douala"></div>
+          <div class="form-group"><label>Quartier / Zone</label><input class="form-input" type="text" placeholder="Ex: Bonanjo" value="Bonanjo"></div>
+          <div class="form-group setup-full"><label>Localisation GPS (optionnel)</label>
+            <div style="display:flex;gap:10px">
+              <input class="form-input" type="text" placeholder="Latitude" value="4.0435" style="flex:1">
+              <input class="form-input" type="text" placeholder="Longitude" value="9.6948" style="flex:1">
+              <button class="btn btn-secondary" style="width:auto;flex-shrink:0;padding:10px 14px" type="button"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-map"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Admin -->
+      <div class="setup-step" id="wiz-2">
+        <h3>Compte administrateur</h3>
+        <p class="setup-desc">Ce sera le premier utilisateur avec tous les droits. Il pourra creer d'autres comptes et attribuer des roles.</p>
+        <div class="setup-grid">
+          <div class="form-group"><label>Nom complet</label><input class="form-input" type="text" placeholder="Dr. Adele Mbarga" value="Dr. Adele Mbarga"></div>
+          <div class="form-group"><label>Email (recuperation)</label><input class="form-input" type="email" placeholder="adele.mbarga@hopital.cm" value="a.mbarga@laquintinie.cm"></div>
+          <div class="form-group"><label>Identifiant de connexion</label><input class="form-input" type="text" placeholder="Choisir un identifiant" value="admin"></div>
+          <div class="form-group"><label>Fonction</label><select class="form-input"><option>Medecin referent</option><option>Chef de service</option><option>Directeur</option><option>Coordinateur programme</option><option>Infirmier(e) chef</option></select></div>
+          <div class="form-group setup-full"><label>Mot de passe</label><input class="form-input" type="password" placeholder="Minimum 8 caracteres" value="monmotdepasse"><div class="pw-strength"><div class="pw-bar filled"></div><div class="pw-bar filled"></div><div class="pw-bar filled"></div><div class="pw-bar"></div></div></div>
+          <div class="form-group setup-full"><label>Confirmer le mot de passe</label><input class="form-input" type="password" placeholder="Retapez le mot de passe" value="monmotdepasse"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Horaires -->
+      <div class="setup-step" id="wiz-3">
+        <h3>Jours et horaires de consultation</h3>
+        <p class="setup-desc">Definissez les creneaux disponibles pour la prise de rendez-vous. Modifiable a tout moment dans les parametres.</p>
+        <div class="form-group">
+          <label>Jours de consultation</label>
+          <div class="day-checks">
+            <div class="day-check on" onclick="this.classList.toggle('on')">L</div>
+            <div class="day-check on" onclick="this.classList.toggle('on')">M</div>
+            <div class="day-check on" onclick="this.classList.toggle('on')">M</div>
+            <div class="day-check on" onclick="this.classList.toggle('on')">J</div>
+            <div class="day-check on" onclick="this.classList.toggle('on')">V</div>
+            <div class="day-check" onclick="this.classList.toggle('on')">S</div>
+            <div class="day-check" onclick="this.classList.toggle('on')">D</div>
+          </div>
+        </div>
+        <div class="setup-grid" style="margin-top:16px">
+          <div class="form-group"><label>Heure de debut</label><input class="form-input" type="time" value="08:00"></div>
+          <div class="form-group"><label>Heure de fin</label><input class="form-input" type="time" value="16:00"></div>
+          <div class="form-group"><label>Duree d'un creneau</label><select class="form-input"><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>1 heure</option></select></div>
+          <div class="form-group"><label>Max patients par jour</label><input class="form-input" type="number" value="40" min="1"></div>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:var(--info-bg);border-radius:var(--radius);display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--info);line-height:1.5">
+          <svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;margin-top:1px"><use href="#i-alert"/></svg>
+          <div>Avec ces parametres, vous aurez <strong>16 creneaux de 30 min</strong> par jour de consultation (08:00 - 16:00). Vous pourrez ajuster par la suite.</div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Rappels -->
+      <div class="setup-step" id="wiz-4">
+        <h3>Configuration des rappels</h3>
+        <p class="setup-desc">Les rappels SMS reduisent les rendez-vous manques de 25 a 50%. MaSante ne fournit pas de SMS — vous connectez votre propre fournisseur. Cette etape est optionnelle.</p>
+
+        <div class="form-group"><label>Activer les rappels automatiques ?</label>
+          <div class="type-options">
+            <div class="type-opt on" onclick="pickType(this);toggleSmsConfig(true)">Oui, activer</div>
+            <div class="type-opt" onclick="pickType(this);toggleSmsConfig(false)">Plus tard</div>
+          </div>
+        </div>
+
+        <div id="smsConfigBlock" style="margin-top:20px">
+          <!-- Fournisseur guide -->
+          <div class="form-group">
+            <label>Choisir un fournisseur SMS</label>
+            <p style="font-size:.82rem;color:var(--gray-400);margin-bottom:10px;line-height:1.5">Un fournisseur SMS est un service qui envoie les messages a vos patients. Vous devez creer un compte chez l'un d'eux et obtenir une cle API. Le cout moyen est de 0.01 a 0.05 USD par SMS.</p>
+          </div>
+
+          <!-- Provider cards -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+            <div class="sms-provider selected" onclick="pickProvider(this)" data-provider="africastalking">
+              <div class="sp-radio"></div>
+              <div class="sp-info">
+                <div class="sp-name">Africa's Talking</div>
+                <div class="sp-desc">Recommande pour l'Afrique. Couverture dans 25+ pays africains. Tarifs competitifs.</div>
+                <div class="sp-countries">Cameroun, Kenya, Nigeria, RDC, Senegal, Cote d'Ivoire, Ghana, Tanzanie...</div>
+              </div>
+              <a class="sp-link" onclick="event.stopPropagation()">Creer un compte</a>
+            </div>
+            <div class="sms-provider" onclick="pickProvider(this)" data-provider="orange">
+              <div class="sp-radio"></div>
+              <div class="sp-info">
+                <div class="sp-name">Orange SMS API</div>
+                <div class="sp-desc">Ideal si vos patients sont majoritairement chez Orange. Integration directe operateur.</div>
+                <div class="sp-countries">Cameroun, Senegal, Cote d'Ivoire, Mali, Burkina Faso, Madagascar, RDC...</div>
+              </div>
+              <a class="sp-link" onclick="event.stopPropagation()">Creer un compte</a>
+            </div>
+            <div class="sms-provider" onclick="pickProvider(this)" data-provider="twilio">
+              <div class="sp-radio"></div>
+              <div class="sp-info">
+                <div class="sp-name">Twilio</div>
+                <div class="sp-desc">Leader mondial. Tres fiable, bonne documentation. Un peu plus cher pour l'Afrique.</div>
+                <div class="sp-countries">Couverture mondiale — tous pays</div>
+              </div>
+              <a class="sp-link" onclick="event.stopPropagation()">Creer un compte</a>
+            </div>
+            <div class="sms-provider" onclick="pickProvider(this)" data-provider="mtn">
+              <div class="sp-radio"></div>
+              <div class="sp-info">
+                <div class="sp-name">MTN SMS API</div>
+                <div class="sp-desc">Operateur majeur en Afrique. Ideal si vos patients sont majoritairement chez MTN.</div>
+                <div class="sp-countries">Cameroun, Nigeria, Ghana, Cote d'Ivoire, RDC, Ouganda, Rwanda, Benin...</div>
+              </div>
+              <a class="sp-link" onclick="event.stopPropagation()">Creer un compte</a>
+            </div>
+            <div class="sms-provider" onclick="pickProvider(this)" data-provider="infobip">
+              <div class="sp-radio"></div>
+              <div class="sp-info">
+                <div class="sp-name">Infobip</div>
+                <div class="sp-desc">Bonne couverture Afrique et support WhatsApp integre.</div>
+                <div class="sp-countries">Couverture mondiale — SMS + WhatsApp</div>
+              </div>
+              <a class="sp-link" onclick="event.stopPropagation()">Creer un compte</a>
+            </div>
+          </div>
+
+          <!-- API config -->
+          <div class="setup-grid">
+            <div class="form-group"><label>Cle API</label><input class="form-input" type="password" placeholder="Collez votre cle API ici"></div>
+            <div class="form-group"><label>Secret API (si requis)</label><input class="form-input" type="password" placeholder="Collez votre secret ici"></div>
+            <div class="form-group"><label>Numero ou nom d'expediteur</label><input class="form-input" type="text" placeholder="Ex: MaSante ou +237 XXX XXX"></div>
+            <div class="form-group"><label>Numero de test</label>
+              <div style="display:flex;gap:8px">
+                <input class="form-input" type="tel" placeholder="+237 6XX XXX XXX" style="flex:1">
+                <button class="btn btn-secondary" style="width:auto;flex-shrink:0" type="button" onclick="testSms(this)"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-send"/></svg> Tester</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test result placeholder -->
+          <div id="smsTestResult" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--radius);font-size:.82rem;line-height:1.5;display:none"></div>
+
+          <!-- Rappels toggles -->
+          <div class="form-group" style="margin-top:18px">
+            <label>Rappels a activer</label>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+              <div class="toggle-row" style="padding:8px 0"><div><div class="toggle-name">Rappel J-7</div><div class="toggle-desc">7 jours avant le rendez-vous</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row" style="padding:8px 0"><div><div class="toggle-name">Rappel J-2</div><div class="toggle-desc">2 jours avant le rendez-vous</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row" style="padding:8px 0;border-bottom:none"><div><div class="toggle-name">Rappel jour J</div><div class="toggle-desc">Le matin du rendez-vous a 7h</div></div><div class="toggle-sw off" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 5: Resume -->
+      <div class="setup-step" id="wiz-5">
+        <div class="setup-success">
+          <div class="success-icon"><svg><use href="#i-check"/></svg></div>
+          <h3>Votre plateforme est prete</h3>
+          <p>Verifiez les informations ci-dessous puis lancez MaSante.</p>
+          <div class="setup-recap">
+            <div class="sr-row"><span class="sr-label">Etablissement</span><span class="sr-val">Hopital Laquintinie</span></div>
+            <div class="sr-row"><span class="sr-label">Type</span><span class="sr-val">Hopital public</span></div>
+            <div class="sr-row"><span class="sr-label">Localisation</span><span class="sr-val">Douala, Bonanjo, Cameroun</span></div>
+            <div class="sr-row"><span class="sr-label">Coordonnees GPS</span><span class="sr-val">4.0435, 9.6948</span></div>
+            <div class="sr-row"><span class="sr-label">Administrateur</span><span class="sr-val">Dr. Adele Mbarga</span></div>
+            <div class="sr-row"><span class="sr-label">Identifiant</span><span class="sr-val">admin</span></div>
+            <div class="sr-row"><span class="sr-label">Consultations</span><span class="sr-val">Lun-Ven, 08:00 - 16:00</span></div>
+            <div class="sr-row"><span class="sr-label">Creneaux</span><span class="sr-val">30 min, max 40 patients/jour</span></div>
+            <div class="sr-row"><span class="sr-label">Rappels SMS</span><span class="sr-val">Actives (J-7, J-2)</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="setup-footer">
+    <button class="btn btn-secondary" id="wizPrev" style="width:auto;visibility:hidden" onclick="wizStep(-1)"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-left"/></svg> Precedent</button>
+    <div class="steps-bar">
+      <div class="step-dot current" id="sd-1"></div>
+      <div class="step-dot" id="sd-2"></div>
+      <div class="step-dot" id="sd-3"></div>
+      <div class="step-dot" id="sd-4"></div>
+      <div class="step-dot" id="sd-5"></div>
+    </div>
+    <button class="btn btn-primary" id="wizNext" style="width:auto" onclick="wizStep(1)">Suivant <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-right"/></svg></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     LOGIN
+     ════════════════════════════════ -->
+<div class="login-screen hidden" id="loginScreen">
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="login-logo"><svg><use href="#i-leaf"/></svg></div>
+      <h1>MaSante</h1>
+      <p>Plateforme de suivi sante communautaire</p>
+    </div>
+    <div class="login-features">
+      <div class="login-feature"><div class="feat-icon"><svg><use href="#i-calendar"/></svg></div><span>Rendez-vous</span></div>
+      <div class="login-feature"><div class="feat-icon"><svg><use href="#i-msg"/></svg></div><span>Rappels</span></div>
+      <div class="login-feature"><div class="feat-icon"><svg><use href="#i-users"/></svg></div><span>Suivi terrain</span></div>
+    </div>
+  </div>
+  <div class="login-right">
+    <h2>Connexion</h2>
+    <p class="subtitle">Entrez vos identifiants pour acceder a votre espace</p>
+    <div class="form-group"><label>Identifiant</label><input class="form-input" type="text" placeholder="Votre identifiant" value="admin"></div>
+    <div class="form-group"><label>Mot de passe</label><input class="form-input" type="password" placeholder="Votre mot de passe" value="monmotdepasse"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px"><a class="card-link" style="font-size:.8rem">Mot de passe oublie ?</a></div>
+    <button class="btn btn-primary" onclick="doLogin()"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Se connecter</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     APP
+     ════════════════════════════════ -->
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo"><svg><use href="#i-leaf"/></svg></div>
+      <div class="sb-brand-text"><h3>MaSante</h3><span>Hopital Laquintinie</span></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">
+        <div class="sb-section-label">Principal</div>
+        <div class="sb-item active" onclick="go('dashboard',this)"><svg><use href="#i-chart"/></svg> Tableau de bord</div>
+        <div class="sb-item" onclick="go('calendar',this)"><svg><use href="#i-calendar"/></svg> Calendrier RDV</div>
+        <div class="sb-item" onclick="go('new-apt',this)"><svg><use href="#i-plus"/></svg> Prise de RDV</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">Patients</div>
+        <div class="sb-item" onclick="go('new-patient',this)"><svg><use href="#i-user-plus"/></svg> Nouveau patient</div>
+        <div class="sb-item" onclick="go('patients',this)"><svg><use href="#i-users"/></svg> Liste patients <span class="sb-badge">847</span></div>
+        <div class="sb-item" onclick="go('patient-file',this)"><svg><use href="#i-clipboard"/></svg> Fiche patient</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">Terrain</div>
+        <div class="sb-item" onclick="go('asc',this)"><svg><use href="#i-walk"/></svg> Module ASC <span class="sb-badge">12</span></div>
+        <div class="sb-item" onclick="go('reminders',this)"><svg><use href="#i-bell"/></svg> Rappels <span class="sb-badge">34</span></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">Systeme</div>
+        <div class="sb-item" onclick="go('users',this)"><svg><use href="#i-shield"/></svg> Utilisateurs</div>
+        <div class="sb-item" onclick="go('settings',this)"><svg><use href="#i-settings"/></svg> Parametres</div>
+        <div class="sb-item" onclick="go('help',this)"><svg><use href="#i-help"/></svg> Centre d'aide</div>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-avatar" style="cursor:pointer" onclick="go('profile',document.querySelectorAll('.sb-item')[10])">AM</div>
+      <div class="sb-user-info" style="cursor:pointer" onclick="go('profile',document.querySelectorAll('.sb-item')[10])"><div class="name">Dr. Adele Mbarga</div><div class="role">Medecin referent — Admin</div></div>
+      <button class="icon-btn" style="color:rgba(255,255,255,.35);flex-shrink:0" onclick="doLogout()" title="Se deconnecter"><svg><use href="#i-logout"/></svg></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title" id="topTitle">Tableau de bord</div>
+      <div class="topbar-search" id="topSearch">
+        <svg><use href="#i-search"/></svg>
+        <input type="text" placeholder="Rechercher un patient, un RDV...">
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-badge online" id="cBadge"><span class="bdot"></span><span id="cText">En ligne</span></div>
+        <button class="icon-btn" onclick="toggleNet()"><svg><use href="#i-wifi"/></svg></button>
+        <button class="icon-btn" onclick="go('help',document.querySelectorAll('.sb-item')[9])"><svg><use href="#i-help"/></svg></button>
+        <button class="icon-btn" onclick="toggleNotif()"><svg><use href="#i-bell"/></svg><span class="ndot"></span></button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="screen active" id="s-dashboard">
+        <div class="stats-row anim-in">
+          <div class="stat"><div class="stat-icon green"><svg><use href="#i-users"/></svg></div><div class="stat-val">847</div><div class="stat-label">Patients actifs</div><div class="stat-trend up"><svg><use href="#i-up"/></svg> +12 ce mois</div></div>
+          <div class="stat"><div class="stat-icon blue"><svg><use href="#i-calendar"/></svg></div><div class="stat-val">38</div><div class="stat-label">RDV aujourd'hui</div><div class="stat-trend up"><svg><use href="#i-up"/></svg> 24 confirmes</div></div>
+          <div class="stat"><div class="stat-icon amber"><svg><use href="#i-chart"/></svg></div><div class="stat-val">87%</div><div class="stat-label">Taux de retention</div><div class="stat-trend up"><svg><use href="#i-up"/></svg> +3.2%</div></div>
+          <div class="stat"><div class="stat-icon red"><svg><use href="#i-alert"/></svg></div><div class="stat-val">23</div><div class="stat-label">Perdus de vue</div><div class="stat-trend down"><svg><use href="#i-down"/></svg> -5</div></div>
+        </div>
+        <div class="grid-2">
+          <!-- RDV du jour -->
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-calendar"/></svg> RDV du jour</h3><a class="card-link" onclick="go('calendar',document.querySelectorAll('.sb-item')[1])">Voir tout</a></div>
+            <div class="card-body">
+              <div class="list-item"><span class="time-label">08:00</span><div class="avatar a1">EN</div><div class="item-info"><div class="item-name">Essomba Nathalie</div><div class="item-sub">Consultation de suivi</div></div><span class="pill pill-success">Confirme</span><button class="icon-btn" onclick="openPostVisit('Essomba Nathalie','Consultation de suivi — 08:00')"><svg><use href="#i-clipboard"/></svg></button></div>
+              <div class="list-item"><span class="time-label">08:30</span><div class="avatar a2">MT</div><div class="item-info"><div class="item-name">Mbouda Thierry</div><div class="item-sub">Retrait medicaments</div></div><span class="pill pill-success">Confirme</span><button class="icon-btn" onclick="openPostVisit('Mbouda Thierry','Retrait medicaments — 08:30')"><svg><use href="#i-clipboard"/></svg></button></div>
+              <div class="list-item"><span class="time-label">09:00</span><div class="avatar a3">AD</div><div class="item-info"><div class="item-name">Atangana Diane</div><div class="item-sub">Bilan sanguin</div></div><span class="pill pill-warning">En attente</span><button class="icon-btn" onclick="openPostVisit('Atangana Diane','Bilan sanguin — 09:00')"><svg><use href="#i-clipboard"/></svg></button></div>
+              <div class="list-item"><span class="time-label">09:30</span><div class="avatar a5">NP</div><div class="item-info"><div class="item-name">Ngoumou Paul</div><div class="item-sub">Consultation de suivi</div></div><span class="pill pill-danger">Manque</span><button class="icon-btn" onclick="openPostVisit('Ngoumou Paul','Consultation de suivi — 09:30')"><svg><use href="#i-clipboard"/></svg></button></div>
+              <div class="list-item"><span class="time-label">10:00</span><div class="avatar a4">FK</div><div class="item-info"><div class="item-name">Fotso Karine</div><div class="item-sub">Club d\'adherence</div></div><span class="pill pill-info">Termine</span><button class="icon-btn" onclick="openPostVisit('Fotso Karine','Club adherence — 10:00')"><svg><use href="#i-clipboard"/></svg></button></div>
+            </div>
+          </div>
+          <!-- Patients en retard -->
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-clock"/></svg> Patients en retard</h3><a class="card-link" onclick="go('asc',document.querySelectorAll('.sb-item')[5])">Assigner ASC</a></div>
+            <div class="card-body">
+              <div class="list-item"><div class="overdue-avatar">TM</div><div class="item-info"><div class="item-name">Tchinda Michel</div><div class="overdue-days">14 jours de retard</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary">Rappeler</button><button class="btn btn-sm btn-secondary" onclick="go('new-apt',document.querySelectorAll('.sb-item')[3])">Reprogrammer</button></div></div>
+              <div class="list-item"><div class="overdue-avatar">OJ</div><div class="item-info"><div class="item-name">Onana Jeanne</div><div class="overdue-days">21 jours de retard</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary">Rappeler</button><button class="btn btn-sm btn-secondary" onclick="go('new-apt',document.querySelectorAll('.sb-item')[3])">Reprogrammer</button></div></div>
+              <div class="list-item"><div class="overdue-avatar">BE</div><div class="item-info"><div class="item-name">Biya Emmanuel</div><div class="overdue-days">8 jours de retard</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary">Rappeler</button><button class="btn btn-sm btn-secondary" onclick="go('new-apt',document.querySelectorAll('.sb-item')[3])">Reprogrammer</button></div></div>
+              <div class="list-item"><div class="overdue-avatar">NS</div><div class="item-info"><div class="item-name">Nkoulou Sandrine</div><div class="overdue-days">32 jours de retard</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary" onclick="go('asc',document.querySelectorAll('.sb-item')[7])">Visite ASC</button><button class="btn btn-sm btn-secondary" onclick="go('new-apt',document.querySelectorAll('.sb-item')[3])">Reprogrammer</button></div></div>
+            </div>
+          </div>
+          <!-- Calendrier -->
+          <div class="card">
+            <div class="card-head"><h3>Avril 2026</h3></div>
+            <div class="card-body">
+              <div class="mcal">
+                <div class="dh">L</div><div class="dh">M</div><div class="dh">M</div><div class="dh">J</div><div class="dh">V</div><div class="dh">S</div><div class="dh">D</div>
+                <div class="dc muted">30</div><div class="dc muted">31</div><div class="dc has">1</div><div class="dc has">2</div><div class="dc has">3</div><div class="dc">4</div><div class="dc">5</div>
+                <div class="dc has">6</div><div class="dc has">7</div><div class="dc today has">8</div><div class="dc has">9</div><div class="dc has">10</div><div class="dc">11</div><div class="dc">12</div>
+                <div class="dc has">13</div><div class="dc has">14</div><div class="dc has">15</div><div class="dc has">16</div><div class="dc has">17</div><div class="dc">18</div><div class="dc">19</div>
+                <div class="dc has">20</div><div class="dc has">21</div><div class="dc has">22</div><div class="dc has">23</div><div class="dc has">24</div><div class="dc">25</div><div class="dc">26</div>
+                <div class="dc has">27</div><div class="dc has">28</div><div class="dc has">29</div><div class="dc has">30</div><div class="dc muted">1</div><div class="dc muted">2</div><div class="dc muted">3</div>
+              </div>
+            </div>
+          </div>
+          <!-- Stats RDV -->
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-chart"/></svg> RDV par statut</h3></div>
+            <div class="card-body" id="statusBars"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CALENDAR ═══ -->
+      <div class="screen" id="s-calendar">
+        <div class="cal-controls">
+          <button class="cal-nav-btn"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-left"/></svg></button>
+          <span class="cal-date">6 – 12 Avril 2026</span>
+          <button class="cal-nav-btn"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-right"/></svg></button>
+          <button class="btn btn-sm btn-secondary" style="width:auto;margin-left:8px">Aujourd'hui</button>
+          <div class="cal-toggle">
+            <button class="cal-tbtn active" onclick="calView(this)">Semaine</button>
+            <button class="cal-tbtn" onclick="calView(this)">Mois</button>
+          </div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-header"><div class="cal-hcell"></div><div class="cal-hcell">Lun 6</div><div class="cal-hcell">Mar 7</div><div class="cal-hcell today">Mer 8</div><div class="cal-hcell">Jeu 9</div><div class="cal-hcell">Ven 10</div><div class="cal-hcell">Sam 11</div><div class="cal-hcell">Dim 12</div></div>
+          <div class="cal-body">
+            <div class="cal-row"><div class="cal-time">08:00</div><div class="cal-slot"><div class="cal-evt c-ok">Essomba N.</div></div><div class="cal-slot"><div class="cal-evt c-done">Fon J.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Essomba N.</div><div class="cal-evt c-wait">Mbouda T.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Nguemba R.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Ekani M.</div></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+            <div class="cal-row"><div class="cal-time">09:00</div><div class="cal-slot"><div class="cal-evt c-wait">Talla S.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Kamga L.</div></div><div class="cal-slot"><div class="cal-evt c-miss">Ngoumou P.</div><div class="cal-evt c-wait">Atangana D.</div></div><div class="cal-slot"><div class="cal-evt c-wait">Eteki C.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Abena F.</div></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+            <div class="cal-row"><div class="cal-time">10:00</div><div class="cal-slot"><div class="cal-evt c-ok">Mbida A.</div></div><div class="cal-slot"><div class="cal-evt c-miss">Tchamba O.</div></div><div class="cal-slot"><div class="cal-evt c-done">Fotso K.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Ndi P.</div></div><div class="cal-slot"></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+            <div class="cal-row"><div class="cal-time">11:00</div><div class="cal-slot"><div class="cal-evt c-ok">Fouda G.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Belinga H.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Manga E.</div></div><div class="cal-slot"></div><div class="cal-slot"><div class="cal-evt c-wait">Ngon S.</div></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+            <div class="cal-row"><div class="cal-time">14:00</div><div class="cal-slot"><div class="cal-evt c-ok">Ondoa R.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Nana Y.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Biwole M.</div></div><div class="cal-slot"><div class="cal-evt c-wait">Simo L.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Youmbi A.</div></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+            <div class="cal-row"><div class="cal-time">15:00</div><div class="cal-slot"><div class="cal-evt c-wait">Kouam F.</div></div><div class="cal-slot"></div><div class="cal-slot"><div class="cal-evt c-ok">Eyenga S.</div></div><div class="cal-slot"><div class="cal-evt c-ok">Messi J.</div></div><div class="cal-slot"></div><div class="cal-slot"></div><div class="cal-slot"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ NEW APT ═══ -->
+      <div class="screen" id="s-new-apt">
+        <div class="apt-grid">
+          <div><div class="card">
+            <div class="card-head"><h3><svg><use href="#i-users"/></svg> Selection du patient</h3></div>
+            <div class="card-body">
+              <div class="search-box"><svg><use href="#i-search"/></svg><input type="text" placeholder="Rechercher par nom ou code..." value="Essomba"></div>
+              <div class="patient-card">
+                <div class="pc-head"><div class="avatar a1 lg">EN</div><div class="item-info"><div class="item-name" style="font-size:1rem">Essomba Nathalie</div><div class="item-sub">MS-2024-00342 &middot; Douala, Akwa</div></div><div class="risk low"><span class="risk-dot"></span> Faible</div></div>
+                <div class="pc-details">
+                  <div><div class="pc-d-label">Age</div><div class="pc-d-val">34 ans</div></div>
+                  <div><div class="pc-d-label">Derniere visite</div><div class="pc-d-val">12 Mars 2026</div></div>
+                  <div><div class="pc-d-label">Statut</div><div class="pc-d-val"><span class="pill pill-success">Stable</span></div></div>
+                  <div><div class="pc-d-label">Langue</div><div class="pc-d-val">Francais</div></div>
+                </div>
+              </div>
+              <div class="form-group"><label>Type de visite</label><select class="form-input"><option>Consultation de suivi</option><option>Retrait medicaments</option><option>Bilan sanguin</option><option>Club d'adherence</option></select></div>
+              <div class="form-group"><label>Preference de rappel</label>
+                <div class="remind-opts">
+                  <div class="r-opt on" onclick="this.classList.toggle('on')"><svg><use href="#i-msg"/></svg> SMS</div>
+                  <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-smartphone"/></svg> WhatsApp</div>
+                  <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-phone"/></svg> Appel vocal</div>
+                  <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-ban"/></svg> Aucun</div>
+                </div>
+              </div>
+              <div class="form-group"><label>Notes</label><textarea class="form-input" rows="3" placeholder="Ajouter des notes..."></textarea></div>
+            </div>
+          </div></div>
+          <div>
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-calendar"/></svg> Date et creneau</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label>Date du rendez-vous</label><input class="form-input" type="date" value="2026-04-15"></div>
+                <div class="form-group"><label>Creneaux disponibles — 15 Avril 2026</label>
+                  <div class="slots-grid">
+                    <div class="slot" onclick="pickSlot(this)">08:00</div><div class="slot" onclick="pickSlot(this)">08:30</div>
+                    <div class="slot off">09:00</div><div class="slot off">09:30</div>
+                    <div class="slot picked">10:00</div><div class="slot" onclick="pickSlot(this)">10:30</div>
+                    <div class="slot" onclick="pickSlot(this)">11:00</div><div class="slot off">11:30</div>
+                    <div class="slot" onclick="pickSlot(this)">14:00</div><div class="slot" onclick="pickSlot(this)">14:30</div>
+                    <div class="slot" onclick="pickSlot(this)">15:00</div><div class="slot" onclick="pickSlot(this)">15:30</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="summary-card" id="summaryCard"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PATIENTS ═══ -->
+      <div class="screen" id="s-patients">
+        <div class="filters">
+          <button class="fbtn on">Tous (847)</button>
+          <button class="fbtn" onclick="this.classList.toggle('on')">Stables (612)</button>
+          <button class="fbtn" onclick="this.classList.toggle('on')">A surveiller (158)</button>
+          <button class="fbtn" onclick="this.classList.toggle('on')">Perdus de vue (23)</button>
+          <button class="fbtn" onclick="this.classList.toggle('on')">Nouveaux (54)</button>
+        </div>
+        <div class="ptable">
+          <div class="pt-head"><div></div><div>Patient</div><div>Risque</div><div>Derniere visite</div><div>Prochain RDV</div><div>Statut</div><div>Actions</div></div>
+          <div class="pt-row" onclick="go('patient-file',document.querySelectorAll('.sb-item')[4])"><div><div class="avatar a1">EN</div></div><div><div class="pt-name">Essomba Nathalie</div><div class="pt-code">MS-2024-00342</div></div><div><span class="risk low"><span class="risk-dot"></span> Faible</span></div><div class="pt-cell">12 Mars 2026</div><div class="pt-cell">15 Avr 2026</div><div><span class="pill pill-success">Stable</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-msg"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a2">MT</div></div><div><div class="pt-name">Mbouda Thierry</div><div class="pt-code">MS-2024-00198</div></div><div><span class="risk med"><span class="risk-dot"></span> Moyen</span></div><div class="pt-cell">28 Fev 2026</div><div class="pt-cell">08 Avr 2026</div><div><span class="pill pill-warning">A surveiller</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-msg"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a3">AD</div></div><div><div class="pt-name">Atangana Diane</div><div class="pt-code">MS-2023-00891</div></div><div><span class="risk low"><span class="risk-dot"></span> Faible</span></div><div class="pt-cell">05 Avr 2026</div><div class="pt-cell">05 Juil 2026</div><div><span class="pill pill-success">Stable</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-msg"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a5">NP</div></div><div><div class="pt-name">Ngoumou Paul</div><div class="pt-code">MS-2025-00067</div></div><div><span class="risk high"><span class="risk-dot"></span> Eleve</span></div><div class="pt-cell">14 Jan 2026</div><div class="pt-cell">—</div><div><span class="pill pill-danger">Perdu de vue</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-walk"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a4">FK</div></div><div><div class="pt-name">Fotso Karine</div><div class="pt-code">MS-2024-00455</div></div><div><span class="risk low"><span class="risk-dot"></span> Faible</span></div><div class="pt-cell">08 Avr 2026</div><div class="pt-cell">08 Jul 2026</div><div><span class="pill pill-success">Stable</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-msg"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a3">TM</div></div><div><div class="pt-name">Tchinda Michel</div><div class="pt-code">MS-2023-00112</div></div><div><span class="risk high"><span class="risk-dot"></span> Eleve</span></div><div class="pt-cell">25 Mars 2026</div><div class="pt-cell">—</div><div><span class="pill pill-danger">Perdu de vue</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-walk"/></svg></button></div></div>
+          <div class="pt-row"><div><div class="avatar a6">OJ</div></div><div><div class="pt-name">Onana Jeanne</div><div class="pt-code">MS-2025-00234</div></div><div><span class="risk med"><span class="risk-dot"></span> Moyen</span></div><div class="pt-cell">18 Mars 2026</div><div class="pt-cell">10 Avr 2026</div><div><span class="pill pill-warning">A surveiller</span></div><div class="pt-acts"><button class="icon-btn"><svg><use href="#i-calendar"/></svg></button><button class="icon-btn"><svg><use href="#i-msg"/></svg></button></div></div>
+        </div>
+      </div>
+
+      <!-- ═══ PATIENT FILE ═══ -->
+      <div class="screen" id="s-patient-file">
+        <div class="pf-layout">
+          <div class="pf-side">
+            <div class="pf-card">
+              <div class="pf-avatar">EN</div>
+              <div class="pf-name">Essomba Nathalie</div>
+              <div class="pf-id">MS-2024-00342</div>
+              <div style="margin-bottom:10px"><span class="pill pill-success">Stable</span></div>
+              <div class="pf-details">
+                <div class="pf-row"><span class="lbl">Age</span><span class="val">34 ans</span></div>
+                <div class="pf-row"><span class="lbl">Sexe</span><span class="val">Feminin</span></div>
+                <div class="pf-row"><span class="lbl">Zone</span><span class="val">Douala, Akwa</span></div>
+                <div class="pf-row"><span class="lbl">Langue</span><span class="val">Francais</span></div>
+                <div class="pf-row"><span class="lbl">Contact</span><span class="val">+237 6** ** **45</span></div>
+                <div class="pf-row"><span class="lbl">Rappels</span><span class="val">SMS</span></div>
+                <div class="pf-row"><span class="lbl">Inscrite</span><span class="val">15 Jan 2024</span></div>
+              </div>
+            </div>
+            <div class="risk-card">
+              <div class="risk-head"><h4>Score de risque</h4><div class="risk-circle">2</div></div>
+              <ul class="rf-list">
+                <li><span class="rf-dot" style="background:var(--success)"></span> 0 RDV manques (12 mois)</li>
+                <li><span class="rf-dot" style="background:var(--success)"></span> Distance clinique : 3 km</li>
+                <li><span class="rf-dot" style="background:var(--success)"></span> Sous traitement 2+ ans</li>
+                <li><span class="rf-dot" style="background:var(--warning)"></span> Tranche d'age a surveiller</li>
+              </ul>
+            </div>
+            <button class="btn btn-primary" onclick="go('new-apt',document.querySelectorAll('.sb-item')[3])" style="margin-bottom:8px"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-calendar"/></svg> Programmer un RDV</button>
+            <button class="btn btn-secondary" onclick="openModal('exitModal')" style="color:var(--gray-500)"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-archive"/></svg> Sortie du programme</button>
+          </div>
+          <div class="pf-main">
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-clock"/></svg> Historique des visites</h3><a class="card-link"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;vertical-align:middle;margin-right:3px"><use href="#i-download"/></svg>Exporter</a></div>
+              <div class="card-body">
+                <div class="tl">
+                  <div class="tl-item current"><div class="tl-date">15 Avril 2026 — a venir</div><div class="tl-content"><div class="tl-type">Consultation de suivi <span class="pill pill-success" style="margin-left:6px">Confirme</span></div><div class="tl-note">Prochain rendez-vous programme</div></div></div>
+                  <div class="tl-item"><div class="tl-date">12 Mars 2026</div><div class="tl-content"><div class="tl-type">Retrait medicaments <span class="pill pill-info" style="margin-left:6px">Termine</span></div><div class="tl-note">Renouvellement TAR 3 mois. RAS.</div></div></div>
+                  <div class="tl-item"><div class="tl-date">10 Decembre 2025</div><div class="tl-content"><div class="tl-type">Bilan sanguin <span class="pill pill-info" style="margin-left:6px">Termine</span></div><div class="tl-note">Resultats dans les normes. Passage a RDV trimestriels valide.</div></div></div>
+                  <div class="tl-item missed"><div class="tl-date">12 Juin 2025</div><div class="tl-content"><div class="tl-type">Consultation de suivi <span class="pill pill-danger" style="margin-left:6px">Manque</span></div><div class="tl-note">Patiente contactee par SMS. Raison : deplacement familial.</div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-clipboard"/></svg> Notes des ASC</h3></div>
+              <div class="card-body">
+                <div style="padding:10px 0;border-bottom:1px solid var(--gray-50)"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-weight:600;font-size:.85rem">ASC Ngassa Marie</span><span style="font-size:.75rem;color:var(--gray-400)">20 Juin 2025</span></div><p style="font-size:.82rem;color:var(--gray-500);line-height:1.5">Visite a domicile suite au RDV manque. Patiente en bonne sante, etait en deplacement a Yaounde. Medicaments en stock suffisant.</p></div>
+                <div style="padding:10px 0"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-weight:600;font-size:.85rem">ASC Fokam Pierre</span><span style="font-size:.75rem;color:var(--gray-400)">15 Jan 2024</span></div><p style="font-size:.82rem;color:var(--gray-500);line-height:1.5">Premiere inscription. Patiente referee par le centre de depistage d'Akwa. Bonne comprehension du programme.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ASC ═══ -->
+      <div class="screen" id="s-asc">
+        <div class="asc-grid">
+          <div>
+            <h3 style="margin-bottom:14px;display:flex;align-items:center;gap:8px"><svg style="width:20px;height:20px;stroke:var(--gray-400);fill:none;stroke-width:1.5"><use href="#i-walk"/></svg> Visites du jour — 12 patients</h3>
+            <div class="visit-card"><div class="v-bar v-high"></div><div class="v-info"><div class="v-name">Nkoulou Sandrine</div><div class="v-zone">Douala, Bonapriso</div><div class="v-reason">32 jours de retard — Urgence</div></div><div class="v-acts"><button class="btn btn-sm btn-primary" style="width:auto">Rapport</button><button class="btn btn-sm btn-secondary" style="width:auto">Appeler</button></div></div>
+            <div class="visit-card"><div class="v-bar v-high"></div><div class="v-info"><div class="v-name">Onana Jeanne</div><div class="v-zone">Douala, Deido</div><div class="v-reason">21 jours de retard</div></div><div class="v-acts"><button class="btn btn-sm btn-primary" style="width:auto">Rapport</button><button class="btn btn-sm btn-secondary" style="width:auto">Appeler</button></div></div>
+            <div class="visit-card"><div class="v-bar v-med"></div><div class="v-info"><div class="v-name">Tchinda Michel</div><div class="v-zone">Douala, Bali</div><div class="v-reason">14 jours de retard</div></div><div class="v-acts"><button class="btn btn-sm btn-primary" style="width:auto">Rapport</button><button class="btn btn-sm btn-secondary" style="width:auto">Appeler</button></div></div>
+            <div class="visit-card"><div class="v-bar v-med"></div><div class="v-info"><div class="v-name">Biya Emmanuel</div><div class="v-zone">Douala, Akwa Nord</div><div class="v-reason">8 jours de retard</div></div><div class="v-acts"><button class="btn btn-sm btn-primary" style="width:auto">Rapport</button><button class="btn btn-sm btn-secondary" style="width:auto">Appeler</button></div></div>
+            <div class="visit-card"><div class="v-bar v-low"></div><div class="v-info"><div class="v-name">Fouda Gaston</div><div class="v-zone">Douala, Bonanjo</div><div class="v-reason">Visite de routine — nouveau patient</div></div><div class="v-acts"><button class="btn btn-sm btn-primary" style="width:auto">Rapport</button><button class="btn btn-sm btn-secondary" style="width:auto">Appeler</button></div></div>
+          </div>
+          <div>
+            <div class="report-form">
+              <h3><svg style="width:18px;height:18px;stroke:var(--gray-400);fill:none;stroke-width:1.5;vertical-align:middle;margin-right:4px"><use href="#i-clipboard"/></svg> Rapport de visite</h3>
+              <div class="form-group"><label>Patient</label><select class="form-input"><option>Nkoulou Sandrine — Bonapriso</option><option>Onana Jeanne — Deido</option><option>Tchinda Michel — Bali</option></select></div>
+              <div class="form-group"><label>Patient trouve ?</label><div class="radio-row"><div class="radio-btn on" onclick="pickRadio(this)">Oui</div><div class="radio-btn" onclick="pickRadio(this)">Non</div><div class="radio-btn" onclick="pickRadio(this)">Demenage</div></div></div>
+              <div class="form-group"><label>Raison de l'absence</label><select class="form-input"><option>Oubli du rendez-vous</option><option>Probleme de transport</option><option>Maladie</option><option>Deplacement / voyage</option><option>Manque de moyens</option></select></div>
+              <div class="form-group"><label>Notes</label><textarea class="form-input" rows="3">Patiente trouvee a domicile. A oublie le RDV car changement de numero. Nouveau numero enregistre. RDV reprogramme au 12 Avril.</textarea></div>
+              <button class="btn btn-primary"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-send"/></svg> Envoyer le rapport</button>
+            </div>
+            <div class="zone-map">
+              <div class="map-dot md-red" style="top:25%;left:30%" title="Nkoulou S."></div>
+              <div class="map-dot md-red" style="top:45%;left:55%" title="Onana J."></div>
+              <div class="map-dot md-amber" style="top:35%;left:70%" title="Tchinda M."></div>
+              <div class="map-dot md-amber" style="top:60%;left:40%" title="Biya E."></div>
+              <div class="map-dot md-green" style="top:55%;left:25%" title="Fouda G."></div>
+              <div class="map-legend"><span><span class="ml-dot" style="background:var(--danger)"></span> Urgent</span><span><span class="ml-dot" style="background:var(--warning)"></span> A visiter</span><span><span class="ml-dot" style="background:var(--success)"></span> Visite</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ REMINDERS ═══ -->
+      <div class="screen" id="s-reminders">
+        <div class="rem-stats anim-in">
+          <div class="rem-stat"><div class="rem-stat-val" style="color:var(--success)">94.2%</div><div class="rem-stat-label">Taux de livraison SMS</div></div>
+          <div class="rem-stat"><div class="rem-stat-val" style="color:var(--info)">67%</div><div class="rem-stat-label">Taux de confirmation</div></div>
+          <div class="rem-stat"><div class="rem-stat-val" style="color:var(--warning)">34</div><div class="rem-stat-label">Rappels a envoyer</div></div>
+          <div class="rem-stat"><div class="rem-stat-val" style="color:var(--danger)">3</div><div class="rem-stat-label">Echecs de livraison</div></div>
+        </div>
+        <div class="grid-2-wide">
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-send"/></svg> File d'attente</h3><a class="card-link">Tout envoyer</a></div>
+            <div class="card-body">
+              <div class="rq-item"><div class="rq-ch ch-sms"><svg><use href="#i-msg"/></svg></div><div class="rq-info"><div class="rq-name">Essomba Nathalie</div><div class="rq-sched">RDV: 15 Avr — Rappel J-7</div></div><span class="pill pill-warning">Planifie</span></div>
+              <div class="rq-item"><div class="rq-ch ch-wa"><svg><use href="#i-smartphone"/></svg></div><div class="rq-info"><div class="rq-name">Kamga Leonard</div><div class="rq-sched">RDV: 10 Avr — Rappel J-2</div></div><span class="pill pill-warning">Planifie</span></div>
+              <div class="rq-item"><div class="rq-ch ch-sms"><svg><use href="#i-msg"/></svg></div><div class="rq-info"><div class="rq-name">Abena Francine</div><div class="rq-sched">RDV: 10 Avr — Envoye 08:15</div></div><span class="pill pill-success">Envoye</span></div>
+              <div class="rq-item"><div class="rq-ch ch-voice"><svg><use href="#i-phone"/></svg></div><div class="rq-info"><div class="rq-name">Nguemba Robert</div><div class="rq-sched">RDV: 09 Avr — Recu 07:30</div></div><span class="pill pill-info">Recu</span></div>
+              <div class="rq-item"><div class="rq-ch ch-sms"><svg><use href="#i-msg"/></svg></div><div class="rq-info"><div class="rq-name">Mbouda Thierry</div><div class="rq-sched">RDV: 08 Avr — Echec 07 Avr</div></div><span class="pill pill-danger">Echec</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><svg><use href="#i-clipboard"/></svg> Modeles de messages</h3></div>
+              <div class="card-body">
+                <div class="form-group" style="margin-bottom:8px"><label>Modele actif — Rappel J-2</label></div>
+                <div class="tpl-editor">
+                  <textarea>Bonjour {prenom}, ceci est un rappel de votre rendez-vous sante prevu le {date} a {heure} au centre de sante. Merci de confirmer en repondant OUI.</textarea>
+                  <div class="tpl-tags"><span class="tpl-tag">{prenom}</span><span class="tpl-tag">{date}</span><span class="tpl-tag">{heure}</span><span class="tpl-tag">{centre}</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-settings"/></svg> Configuration</h3></div>
+              <div class="card-body" id="cfgToggles"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div class="screen" id="s-settings">
+        <div class="grid-2-wide">
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-settings"/></svg> Parametres generaux</h3></div>
+            <div class="card-body">
+              <div class="toggle-row"><div><div class="toggle-name">Mode hors ligne</div><div class="toggle-desc">Synchroniser les donnees automatiquement</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Notifications push</div><div class="toggle-desc">Alertes pour les RDV manques</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Synchronisation DHIS2</div><div class="toggle-desc">Export automatique vers le systeme national</div></div><div class="toggle-sw off" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Export OpenMRS</div><div class="toggle-desc">Compatibilite avec le dossier medical electronique</div></div><div class="toggle-sw off" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-users"/></svg> Equipe soignante</h3><a class="card-link" onclick="go('users')">Gerer les utilisateurs</a></div>
+            <div class="card-body">
+              <div class="list-item"><div class="avatar a1">AM</div><div class="item-info"><div class="item-name">Dr. Adele Mbarga</div><div class="item-sub">Medecin referent</div></div><span class="pill pill-success">Actif</span></div>
+              <div class="list-item"><div class="avatar a2">NM</div><div class="item-info"><div class="item-name">Ngassa Marie</div><div class="item-sub">Agent de Sante Communautaire</div></div><span class="pill pill-success">Actif</span></div>
+              <div class="list-item"><div class="avatar a3">FP</div><div class="item-info"><div class="item-name">Fokam Pierre</div><div class="item-sub">Agent de Sante Communautaire</div></div><span class="pill pill-success">Actif</span></div>
+              <div class="list-item"><div class="avatar a4">TE</div><div class="item-info"><div class="item-name">Tagne Estelle</div><div class="item-sub">Infirmiere</div></div><span class="pill pill-neutral">Conge</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-chart"/></svg> Rapports et exports</h3></div>
+            <div class="card-body">
+              <div class="list-item"><div style="flex:1"><div class="item-name">Rapport mensuel — Mars 2026</div><div class="item-sub">Genere le 01 Avr 2026</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> Excel</button><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> PDF</button></div></div>
+              <div class="list-item"><div style="flex:1"><div class="item-name">Cascade 95-95-95 — T1 2026</div><div class="item-sub">Indicateurs trimestriels</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> Excel</button><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> PDF</button></div></div>
+              <div class="list-item"><div style="flex:1"><div class="item-name">Liste patients perdus de vue</div><div class="item-sub">23 patients — mise a jour 08 Avr</div></div><div class="pt-acts"><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> Excel</button><button class="btn btn-sm btn-secondary"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-download"/></svg> PDF</button></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-bell"/></svg> Preferences de rappels</h3></div>
+            <div class="card-body">
+              <div class="toggle-row"><div><div class="toggle-name">Rappel J-7</div><div class="toggle-desc">7 jours avant le RDV</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Rappel J-2</div><div class="toggle-desc">2 jours avant le RDV</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Rappel jour J</div><div class="toggle-desc">Le matin du RDV a 7h</div></div><div class="toggle-sw off" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+              <div class="toggle-row"><div><div class="toggle-name">Rappel de retard</div><div class="toggle-desc">Automatique apres 3 jours de retard</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ NEW PATIENT ═══ -->
+      <div class="screen" id="s-new-patient">
+        <div class="apt-grid">
+          <div>
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-user-plus"/></svg> Inscription d'un nouveau patient</h3></div>
+              <div class="card-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                  <div class="form-group"><label>Nom</label><input class="form-input" type="text" placeholder="Nom de famille"></div>
+                  <div class="form-group"><label>Prenom</label><input class="form-input" type="text" placeholder="Prenom"></div>
+                  <div class="form-group"><label>Date de naissance</label><input class="form-input" type="date"></div>
+                  <div class="form-group"><label>Sexe</label><select class="form-input"><option value="">Selectionner</option><option>Masculin</option><option>Feminin</option></select></div>
+                  <div class="form-group"><label>Telephone</label><input class="form-input" type="tel" placeholder="+237 6XX XXX XXX"></div>
+                  <div class="form-group"><label>Telephone secondaire</label><input class="form-input" type="tel" placeholder="Optionnel"></div>
+                  <div class="form-group"><label>Quartier / Zone</label><select class="form-input"><option value="">Selectionner</option><option>Akwa</option><option>Akwa Nord</option><option>Bali</option><option>Bonapriso</option><option>Bonanjo</option><option>Deido</option><option>New Bell</option><option>Nylon</option><option>Cite des Palmiers</option><option>Makepe</option><option>Logbessou</option></select></div>
+                  <div class="form-group"><label>Adresse</label><input class="form-input" type="text" placeholder="Repere ou description du lieu"></div>
+                </div>
+                <div class="form-group"><label>Langue preferee</label>
+                  <div class="remind-opts">
+                    <div class="r-opt on" onclick="pickLang(this)">Francais</div>
+                    <div class="r-opt" onclick="pickLang(this)">Anglais</div>
+                    <div class="r-opt" onclick="pickLang(this)">Duala</div>
+                    <div class="r-opt" onclick="pickLang(this)">Ewondo</div>
+                    <div class="r-opt" onclick="pickLang(this)">Bamileke</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><svg><use href="#i-msg"/></svg> Preferences de contact</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label>Canal de rappel prefere</label>
+                  <div class="remind-opts">
+                    <div class="r-opt on" onclick="this.classList.toggle('on')"><svg><use href="#i-msg"/></svg> SMS</div>
+                    <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-smartphone"/></svg> WhatsApp</div>
+                    <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-phone"/></svg> Appel vocal</div>
+                    <div class="r-opt" onclick="this.classList.toggle('on')"><svg><use href="#i-ban"/></svg> Aucun</div>
+                  </div>
+                </div>
+                <div class="form-group"><label>Personne de confiance</label><input class="form-input" type="text" placeholder="Nom du contact de confiance"></div>
+                <div class="form-group"><label>Telephone personne de confiance</label><input class="form-input" type="tel" placeholder="+237 6XX XXX XXX"></div>
+                <div class="form-group"><label>Lien avec le patient</label><select class="form-input"><option value="">Selectionner</option><option>Conjoint(e)</option><option>Parent</option><option>Frere / Soeur</option><option>Ami(e)</option><option>Autre</option></select></div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><svg><use href="#i-clipboard"/></svg> Informations medicales</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label>Refere par</label><select class="form-input"><option value="">Selectionner</option><option>Centre de depistage</option><option>Transfert d'un autre centre</option><option>Auto-presentation</option><option>Agent de sante communautaire</option><option>Autre structure</option></select></div>
+                <div class="form-group"><label>Date d'inclusion dans le programme</label><input class="form-input" type="date" value="2026-04-08"></div>
+                <div class="form-group"><label>Notes d'inscription</label><textarea class="form-input" rows="3" placeholder="Observations initiales, contexte de reference..."></textarea></div>
+              </div>
+            </div>
+            <div class="summary-card">
+              <h3 style="font-size:.95rem;color:var(--gray-900);margin-bottom:10px">Avant de valider</h3>
+              <ul class="rf-list" style="margin-bottom:14px">
+                <li><span class="rf-dot" style="background:var(--success)"></span> Un code patient unique sera genere automatiquement</li>
+                <li><span class="rf-dot" style="background:var(--success)"></span> Le premier RDV pourra etre programme apres inscription</li>
+                <li><span class="rf-dot" style="background:var(--warning)"></span> Verifiez que le numero de telephone est correct pour les rappels</li>
+              </ul>
+              <button class="btn btn-primary"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Inscrire le patient</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ CENTRE D'AIDE ═══ -->
+      <div class="screen" id="s-help">
+
+        <!-- Recherche aide -->
+        <div style="text-align:center;margin-bottom:28px">
+          <h3 style="font-size:1.4rem;margin-bottom:6px">Comment pouvons-nous vous aider ?</h3>
+          <p style="color:var(--gray-400);font-size:.9rem;margin-bottom:16px">Recherchez dans les guides ou parcourez les rubriques ci-dessous</p>
+          <div style="max-width:480px;margin:0 auto;position:relative">
+            <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-search"/></svg>
+            <input class="form-input" type="text" placeholder="Ex: comment programmer un RDV, ajouter un patient..." style="padding-left:42px;font-size:.9rem">
+          </div>
+        </div>
+
+        <!-- Guides rapides -->
+        <div style="margin-bottom:24px">
+          <h4 style="font-size:.95rem;margin-bottom:12px;display:flex;align-items:center;gap:8px"><svg style="width:18px;height:18px;stroke:var(--gray-400);fill:none;stroke-width:1.5"><use href="#i-book"/></svg> Guides de demarrage</h4>
+          <div class="grid-2" style="align-items:start">
+            <div class="card help-card" onclick="toggleHelp(this)">
+              <div class="card-body" style="padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="stat-icon green" style="width:36px;height:36px;margin-bottom:0"><svg><use href="#i-user-plus"/></svg></div>
+                  <div><div style="font-weight:600;font-size:.9rem">Inscrire un nouveau patient</div><div style="font-size:.75rem;color:var(--gray-400)">3 min de lecture</div></div>
+                  <svg class="help-chevron" style="width:16px;height:16px;stroke:var(--gray-300);fill:none;stroke-width:1.5;margin-left:auto;transition:var(--ease)"><use href="#i-down"/></svg>
+                </div>
+                <div class="help-content" style="display:none;padding-top:10px;border-top:1px solid var(--gray-50);font-size:.85rem;color:var(--gray-500);line-height:1.7">
+                  <p><strong>1.</strong> Cliquez sur <strong>Nouveau patient</strong> dans la barre laterale</p>
+                  <p><strong>2.</strong> Remplissez les informations : nom, prenom, telephone, quartier</p>
+                  <p><strong>3.</strong> Selectionnez la langue preferee du patient</p>
+                  <p><strong>4.</strong> Ajoutez un contact de confiance (optionnel mais recommande)</p>
+                  <p><strong>5.</strong> Indiquez comment le patient a ete refere</p>
+                  <p><strong>6.</strong> Cliquez sur <strong>Inscrire le patient</strong> — un code unique sera genere</p>
+                  <p style="margin-top:8px;color:var(--gray-400);font-size:.8rem">Apres l'inscription, vous pourrez programmer son premier rendez-vous.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card help-card" onclick="toggleHelp(this)">
+              <div class="card-body" style="padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="stat-icon blue" style="width:36px;height:36px;margin-bottom:0"><svg><use href="#i-calendar"/></svg></div>
+                  <div><div style="font-weight:600;font-size:.9rem">Programmer un rendez-vous</div><div style="font-size:.75rem;color:var(--gray-400)">2 min de lecture</div></div>
+                  <svg class="help-chevron" style="width:16px;height:16px;stroke:var(--gray-300);fill:none;stroke-width:1.5;margin-left:auto;transition:var(--ease)"><use href="#i-down"/></svg>
+                </div>
+                <div class="help-content" style="display:none;padding-top:10px;border-top:1px solid var(--gray-50);font-size:.85rem;color:var(--gray-500);line-height:1.7">
+                  <p><strong>1.</strong> Allez dans <strong>Prise de RDV</strong></p>
+                  <p><strong>2.</strong> Recherchez le patient par nom ou code</p>
+                  <p><strong>3.</strong> Selectionnez le type de visite (consultation, retrait medicaments, bilan sanguin, club)</p>
+                  <p><strong>4.</strong> Choisissez la date et un creneau disponible</p>
+                  <p><strong>5.</strong> Selectionnez le mode de rappel (SMS, WhatsApp, appel vocal)</p>
+                  <p><strong>6.</strong> Cliquez sur <strong>Confirmer le rendez-vous</strong></p>
+                  <p style="margin-top:8px;color:var(--gray-400);font-size:.8rem">Les rappels seront envoyes automatiquement selon votre configuration.</p>
+                </div>
+              </div>
+            </div>
+            <div class="card help-card" onclick="toggleHelp(this)">
+              <div class="card-body" style="padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="stat-icon amber" style="width:36px;height:36px;margin-bottom:0"><svg><use href="#i-clipboard"/></svg></div>
+                  <div><div style="font-weight:600;font-size:.9rem">Gerer un rendez-vous (termine, manque, reporte)</div><div style="font-size:.75rem;color:var(--gray-400)">2 min de lecture</div></div>
+                  <svg class="help-chevron" style="width:16px;height:16px;stroke:var(--gray-300);fill:none;stroke-width:1.5;margin-left:auto;transition:var(--ease)"><use href="#i-down"/></svg>
+                </div>
+                <div class="help-content" style="display:none;padding-top:10px;border-top:1px solid var(--gray-50);font-size:.85rem;color:var(--gray-500);line-height:1.7">
+                  <p><strong>Depuis le dashboard :</strong> Cliquez sur l'icone a droite du RDV dans la liste "RDV du jour"</p>
+                  <p><strong>Depuis le calendrier :</strong> Cliquez sur l'evenement</p>
+                  <p style="margin-top:6px">Une fenetre s'ouvre avec 4 options :</p>
+                  <p>- <strong>Termine</strong> : ajoutez vos notes de consultation et programmez le prochain RDV</p>
+                  <p>- <strong>Manque</strong> : choisissez une action (rappel SMS, assigner un ASC, reprogrammer)</p>
+                  <p>- <strong>Reporte</strong> : selectionnez une nouvelle date et la raison</p>
+                  <p>- <strong>Annule</strong> : le RDV est retire du calendrier</p>
+                </div>
+              </div>
+            </div>
+            <div class="card help-card" onclick="toggleHelp(this)">
+              <div class="card-body" style="padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                  <div class="stat-icon red" style="width:36px;height:36px;margin-bottom:0"><svg><use href="#i-walk"/></svg></div>
+                  <div><div style="font-weight:600;font-size:.9rem">Suivre un patient en retard (module ASC)</div><div style="font-size:.75rem;color:var(--gray-400)">3 min de lecture</div></div>
+                  <svg class="help-chevron" style="width:16px;height:16px;stroke:var(--gray-300);fill:none;stroke-width:1.5;margin-left:auto;transition:var(--ease)"><use href="#i-down"/></svg>
+                </div>
+                <div class="help-content" style="display:none;padding-top:10px;border-top:1px solid var(--gray-50);font-size:.85rem;color:var(--gray-500);line-height:1.7">
+                  <p><strong>1.</strong> Les patients en retard apparaissent automatiquement dans le <strong>module ASC</strong></p>
+                  <p><strong>2.</strong> Ils sont tries par urgence (rouge = plus de 21 jours, orange = 7-21 jours)</p>
+                  <p><strong>3.</strong> Cliquez sur <strong>Rapport</strong> pour remplir le formulaire de visite</p>
+                  <p><strong>4.</strong> Indiquez si le patient a ete trouve, la raison de l'absence</p>
+                  <p><strong>5.</strong> Reprogrammez un RDV si le patient accepte</p>
+                  <p style="margin-top:8px;color:var(--gray-400);font-size:.8rem">La carte des zones affiche la localisation des patients a visiter.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rubriques -->
+        <div class="grid-2-wide" style="align-items:start">
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-msg"/></svg> Rappels et SMS</h3></div>
+            <div class="card-body">
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment configurer les rappels SMS ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Allez dans <strong>Parametres</strong>, section <strong>Preferences de rappels</strong>. Activez ou desactivez les rappels J-7, J-2 et jour J. Pour configurer le fournisseur SMS, allez dans Parametres et relancez l'assistant de configuration SMS.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Un SMS n'a pas ete livre, que faire ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Verifiez dans <strong>Rappels</strong> le statut "Echec". Les causes frequentes : numero incorrect, telephone eteint, credit API epuise. Vous pouvez renvoyer le rappel manuellement ou contacter le patient par un autre canal.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Les messages mentionnent-ils la maladie ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a"><strong>Jamais.</strong> Tous les messages sont generiques : "rappel de votre rendez-vous sante". Vous pouvez personnaliser les modeles dans <strong>Rappels > Modeles de messages</strong> mais aucune mention de pathologie ne doit etre ajoutee.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-users"/></svg> Gestion des patients</h3></div>
+            <div class="card-body">
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment declarer un deces ou une sortie ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Ouvrez la <strong>fiche du patient</strong>, cliquez sur <strong>Sortie du programme</strong>. Choisissez le motif (deces, transfert, abandon, perdu de vue, guerison), la date et ajoutez des notes. Le dossier sera archive.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Que signifie le score de risque ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Le score de risque (1 a 10) estime la probabilite qu'un patient manque son prochain RDV. Il est calcule a partir de : nombre de RDV manques, distance au centre, duree sous traitement, tranche d'age. Plus le score est eleve, plus le suivi doit etre rapproche.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment changer la frequence de suivi ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Lors de la mise a jour d'un RDV (statut "Termine"), vous pouvez choisir la frequence : mensuel, trimestriel ou semestriel. Le prochain RDV sera programme automatiquement selon cette frequence.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-settings"/></svg> Technique et parametres</h3></div>
+            <div class="card-body">
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>MaSante fonctionne-t-il sans internet ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a"><strong>Oui.</strong> Toutes les fonctions (RDV, fiches patients, rapports) fonctionnent hors ligne. Seuls les rappels SMS necessitent une connexion. Les donnees se synchronisent automatiquement quand internet revient.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment ajouter un nouvel utilisateur ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Seul l'administrateur peut creer des comptes. Allez dans <strong>Parametres > Equipe soignante</strong>, cliquez sur <strong>Ajouter</strong>, remplissez les informations et attribuez un role (medecin, infirmier, ASC, admin).</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment sauvegarder les donnees ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">MaSante sauvegarde automatiquement toutes les donnees en local. Pour une sauvegarde externe, allez dans <strong>Parametres</strong> et utilisez la fonction <strong>Exporter la base</strong>. Nous recommandons une sauvegarde hebdomadaire sur cle USB.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-alert"/></svg> Depannage</h3></div>
+            <div class="card-body">
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>L'application est lente, que faire ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Verifiez dans <strong>Parametres > Systeme</strong> l'utilisation de la base de donnees. Si vous approchez 2 000 patients avec 5+ utilisateurs, contactez-nous pour une migration vers PostgreSQL. Sinon, essayez de redemarrer l'application.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>J'ai oublie mon mot de passe</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">Contactez l'administrateur de votre centre. Seul l'admin peut reinitialiser un mot de passe. Si vous etes l'admin, utilisez la procedure de recuperation par email configuree lors du setup initial.</div>
+              </div>
+              <div class="help-faq" onclick="toggleFaq(this)">
+                <div class="faq-q"><span>Comment contacter le support ?</span><svg class="help-chevron" style="width:14px;height:14px;stroke:var(--gray-300);fill:none;stroke-width:1.5"><use href="#i-down"/></svg></div>
+                <div class="faq-a">MaSante est un logiciel open source gratuit. Pour obtenir de l'aide : consultez la documentation sur <strong>masante.africa</strong>, rejoignez la communaute, ou contactez-nous pour un contrat de support.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version -->
+        <div style="text-align:center;margin-top:24px;padding:16px;color:var(--gray-300);font-size:.78rem">
+          MaSante v1.0.0 — Logiciel libre et gratuit — masante.africa
+        </div>
+
+      </div>
+
+      <!-- ═══ PROFIL ═══ -->
+      <div class="screen" id="s-profile">
+        <div class="grid-2-wide" style="align-items:start">
+          <div>
+            <!-- Infos personnelles -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><svg><use href="#i-user"/></svg> Informations personnelles</h3></div>
+              <div class="card-body">
+                <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">
+                  <div class="pf-avatar" style="margin:0;width:72px;height:72px;font-size:1.4rem">AM</div>
+                  <div>
+                    <div style="font-weight:700;font-size:1.1rem">Dr. Adele Mbarga</div>
+                    <div style="color:var(--gray-400);font-size:.85rem">Administrateur — Medecin referent</div>
+                    <div style="color:var(--gray-300);font-size:.78rem;margin-top:2px">Membre depuis Janvier 2024</div>
+                  </div>
+                </div>
+                <div class="setup-grid">
+                  <div class="form-group"><label>Nom complet</label><input class="form-input" type="text" value="Dr. Adele Mbarga"></div>
+                  <div class="form-group"><label>Email</label><input class="form-input" type="email" value="a.mbarga@laquintinie.cm"></div>
+                  <div class="form-group"><label>Fonction</label><select class="form-input"><option selected>Medecin referent</option><option>Chef de service</option><option>Directeur</option><option>Coordinateur programme</option><option>Infirmier(e) chef</option></select></div>
+                  <div class="form-group"><label>Telephone</label><input class="form-input" type="tel" value="+237 6XX XXX XXX"></div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:8px;width:auto"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Enregistrer les modifications</button>
+              </div>
+            </div>
+
+            <!-- Securite -->
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-shield"/></svg> Securite</h3></div>
+              <div class="card-body">
+                <div class="form-group"><label>Mot de passe actuel</label><input class="form-input" type="password" placeholder="Entrez votre mot de passe actuel"></div>
+                <div class="setup-grid">
+                  <div class="form-group"><label>Nouveau mot de passe</label><input class="form-input" type="password" placeholder="Minimum 8 caracteres"></div>
+                  <div class="form-group"><label>Confirmer</label><input class="form-input" type="password" placeholder="Retapez le nouveau mot de passe"></div>
+                </div>
+                <button class="btn btn-secondary" style="margin-top:8px;width:auto"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-shield"/></svg> Changer le mot de passe</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Activite -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-head"><h3><svg><use href="#i-clock"/></svg> Activite recente</h3></div>
+              <div class="card-body">
+                <div class="list-item"><div class="notif-icon ni-ok"><svg><use href="#i-check"/></svg></div><div class="item-info"><div class="item-name" style="font-size:.85rem">RDV programme pour Essomba Nathalie</div><div class="item-sub">Aujourd'hui, 09:15</div></div></div>
+                <div class="list-item"><div class="notif-icon ni-info"><svg><use href="#i-user-plus"/></svg></div><div class="item-info"><div class="item-name" style="font-size:.85rem">Nouveau patient inscrit : Biya Emmanuel</div><div class="item-sub">Hier, 14:30</div></div></div>
+                <div class="list-item"><div class="notif-icon ni-warn"><svg><use href="#i-clipboard"/></svg></div><div class="item-info"><div class="item-name" style="font-size:.85rem">RDV marque manque : Ngoumou Paul</div><div class="item-sub">Hier, 10:00</div></div></div>
+                <div class="list-item"><div class="notif-icon ni-ok"><svg><use href="#i-send"/></svg></div><div class="item-info"><div class="item-name" style="font-size:.85rem">12 rappels SMS envoyes</div><div class="item-sub">07 Avr, 08:00</div></div></div>
+                <div class="list-item"><div class="notif-icon ni-info"><svg><use href="#i-settings"/></svg></div><div class="item-info"><div class="item-name" style="font-size:.85rem">Parametres de rappel modifies</div><div class="item-sub">05 Avr, 16:45</div></div></div>
+              </div>
+            </div>
+
+            <!-- Preferences -->
+            <div class="card">
+              <div class="card-head"><h3><svg><use href="#i-settings"/></svg> Preferences</h3></div>
+              <div class="card-body">
+                <div class="toggle-row"><div><div class="toggle-name">Notifications sonores</div><div class="toggle-desc">Son lors d'un RDV manque ou alerte</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><div><div class="toggle-name">Afficher les patients a risque en priorite</div><div class="toggle-desc">Trier le dashboard par score de risque</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+                <div class="toggle-row"><div><div class="toggle-name">Langue de l'interface</div><div class="toggle-desc">Francais</div></div><select class="form-input" style="width:120px;padding:6px 10px;font-size:.82rem"><option>Francais</option><option>English</option></select></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ GESTION UTILISATEURS ═══ -->
+      <div class="screen" id="s-users">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <h3 style="font-size:1.1rem">Equipe soignante</h3>
+            <p style="color:var(--gray-400);font-size:.85rem">Gerez les comptes et les roles des membres de votre equipe</p>
+          </div>
+          <button class="btn btn-primary" style="width:auto" onclick="openModal('addUserModal')"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-user-plus"/></svg> Ajouter un utilisateur</button>
+        </div>
+
+        <!-- Roles explanation -->
+        <div class="grid-2" style="margin-bottom:20px;align-items:start">
+          <div class="card">
+            <div class="card-head"><h3><svg><use href="#i-shield"/></svg> Roles disponibles</h3></div>
+            <div class="card-body" style="font-size:.82rem;color:var(--gray-500);line-height:1.6">
+              <div style="margin-bottom:12px"><span class="pill pill-danger" style="margin-right:6px">Admin</span> Acces complet. Gere les utilisateurs, les parametres, les exports. Un seul admin recommande.</div>
+              <div style="margin-bottom:12px"><span class="pill pill-info" style="margin-right:6px">Medecin</span> Dashboard, patients, fiches, RDV, rapports. Ne peut pas gerer les utilisateurs ni les parametres systeme.</div>
+              <div style="margin-bottom:12px"><span class="pill pill-warning" style="margin-right:6px">Infirmier</span> Patients, RDV, prise de RDV, rappels. Pas d'acces aux rapports ni aux parametres.</div>
+              <div><span class="pill pill-success" style="margin-right:6px">ASC</span> Module ASC uniquement. Voit seulement ses patients assignes et le formulaire de rapport.</div>
+            </div>
+          </div>
+          <div></div>
+        </div>
+
+        <!-- Users table -->
+        <div class="ptable">
+          <div class="pt-head" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div></div><div>Utilisateur</div><div>Role</div><div>Derniere connexion</div><div>Statut</div><div>Actions</div></div>
+          <div class="pt-row" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div><div class="avatar a1">AM</div></div><div><div class="pt-name">Dr. Adele Mbarga</div><div class="pt-code">admin — a.mbarga@laquintinie.cm</div></div><div><span class="pill pill-danger">Admin</span></div><div class="pt-cell">Aujourd'hui, 08:12</div><div><span class="pill pill-success">Actif</span></div><div class="pt-acts"><button class="icon-btn" onclick="go('profile')"><svg><use href="#i-edit"/></svg></button></div></div>
+          <div class="pt-row" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div><div class="avatar a2">NM</div></div><div><div class="pt-name">Ngassa Marie</div><div class="pt-code">ngassa.m — ngassa@mail.cm</div></div><div><span class="pill pill-success">ASC</span></div><div class="pt-cell">Hier, 17:30</div><div><span class="pill pill-success">Actif</span></div><div class="pt-acts"><button class="icon-btn" onclick="openModal('editUserModal')"><svg><use href="#i-edit"/></svg></button><button class="icon-btn"><svg><use href="#i-trash"/></svg></button></div></div>
+          <div class="pt-row" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div><div class="avatar a3">FP</div></div><div><div class="pt-name">Fokam Pierre</div><div class="pt-code">fokam.p — fokam@mail.cm</div></div><div><span class="pill pill-success">ASC</span></div><div class="pt-cell">06 Avr, 09:15</div><div><span class="pill pill-success">Actif</span></div><div class="pt-acts"><button class="icon-btn" onclick="openModal('editUserModal')"><svg><use href="#i-edit"/></svg></button><button class="icon-btn"><svg><use href="#i-trash"/></svg></button></div></div>
+          <div class="pt-row" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div><div class="avatar a4">TE</div></div><div><div class="pt-name">Tagne Estelle</div><div class="pt-code">tagne.e — tagne@mail.cm</div></div><div><span class="pill pill-warning">Infirmier</span></div><div class="pt-cell">01 Avr, 14:00</div><div><span class="pill pill-neutral">Conge</span></div><div class="pt-acts"><button class="icon-btn" onclick="openModal('editUserModal')"><svg><use href="#i-edit"/></svg></button><button class="icon-btn"><svg><use href="#i-trash"/></svg></button></div></div>
+          <div class="pt-row" style="grid-template-columns:44px 2fr 1fr 1fr 1fr 120px"><div><div class="avatar a6">KJ</div></div><div><div class="pt-name">Dr. Kamga Jean</div><div class="pt-code">kamga.j — kamga@laquintinie.cm</div></div><div><span class="pill pill-info">Medecin</span></div><div class="pt-cell">Aujourd'hui, 07:45</div><div><span class="pill pill-success">Actif</span></div><div class="pt-acts"><button class="icon-btn" onclick="openModal('editUserModal')"><svg><use href="#i-edit"/></svg></button><button class="icon-btn"><svg><use href="#i-trash"/></svg></button></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════
+     NOTIFICATION PANEL
+     ════════════════════════════════ -->
+<div class="notif-overlay" id="notifOverlay" onclick="toggleNotif()"></div>
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-head"><h3>Notifications</h3><button class="icon-btn" onclick="toggleNotif()"><svg><use href="#i-x"/></svg></button></div>
+  <div class="notif-body">
+    <div class="notif-item"><div class="notif-icon ni-danger"><svg><use href="#i-alert"/></svg></div><div><div class="notif-text"><strong>Nkoulou Sandrine</strong> — 32 jours de retard. Visite ASC recommandee.</div><div class="notif-time">Il y a 2 heures</div></div></div>
+    <div class="notif-item"><div class="notif-icon ni-warn"><svg><use href="#i-clock"/></svg></div><div><div class="notif-text"><strong>Ngoumou Paul</strong> a manque son RDV de 09:30 ce matin.</div><div class="notif-time">Il y a 3 heures</div></div></div>
+    <div class="notif-item"><div class="notif-icon ni-ok"><svg><use href="#i-check"/></svg></div><div><div class="notif-text"><strong>Essomba Nathalie</strong> a confirme son RDV du 15 Avril par SMS.</div><div class="notif-time">Il y a 5 heures</div></div></div>
+    <div class="notif-item"><div class="notif-icon ni-info"><svg><use href="#i-send"/></svg></div><div><div class="notif-text">34 rappels SMS programmes pour cette semaine. 3 echecs de livraison a verifier.</div><div class="notif-time">Hier, 18:00</div></div></div>
+    <div class="notif-item"><div class="notif-icon ni-ok"><svg><use href="#i-users"/></svg></div><div><div class="notif-text">ASC Ngassa Marie a soumis 4 rapports de visite.</div><div class="notif-time">Hier, 16:30</div></div></div>
+    <div class="notif-item"><div class="notif-icon ni-warn"><svg><use href="#i-alert"/></svg></div><div><div class="notif-text">Synchronisation DHIS2 en attente — connexion intermittente detectee.</div><div class="notif-time">Hier, 14:00</div></div></div>
+  </div>
+</div>
+
+<script>
+// Setup wizard
+var wizCur = 1;
+var wizTotal = 5;
+function wizStep(dir){
+  var next = wizCur + dir;
+  if(next < 1) return;
+  if(next > wizTotal){
+    // Finish setup -> show login
+    document.getElementById('setupScreen').classList.add('hidden');
+    setTimeout(function(){
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }, 300);
+    return;
+  }
+  document.getElementById('wiz-'+wizCur).classList.remove('active');
+  wizCur = next;
+  document.getElementById('wiz-'+wizCur).classList.add('active');
+  document.getElementById('stepLabel').textContent = 'Etape '+wizCur+' sur '+wizTotal;
+  document.getElementById('progressFill').style.width = (wizCur/wizTotal*100)+'%';
+  document.getElementById('wizPrev').style.visibility = wizCur===1?'hidden':'visible';
+  var nextBtn = document.getElementById('wizNext');
+  if(wizCur===wizTotal){
+    nextBtn.textContent = '';
+    var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('style','width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5');
+    var u = document.createElementNS('http://www.w3.org/2000/svg','use');
+    u.setAttributeNS('http://www.w3.org/1999/xlink','href','#i-check');
+    svg.appendChild(u);
+    nextBtn.appendChild(document.createTextNode('Lancer MaSante '));
+    nextBtn.appendChild(svg);
+  } else {
+    nextBtn.textContent = '';
+    nextBtn.appendChild(document.createTextNode('Suivant '));
+    var svg2 = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg2.setAttribute('style','width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5');
+    var u2 = document.createElementNS('http://www.w3.org/2000/svg','use');
+    u2.setAttributeNS('http://www.w3.org/1999/xlink','href','#i-right');
+    svg2.appendChild(u2);
+    nextBtn.appendChild(svg2);
+  }
+  // Update dots
+  for(var i=1;i<=wizTotal;i++){
+    var dot=document.getElementById('sd-'+i);
+    dot.className='step-dot';
+    if(i<wizCur) dot.classList.add('done');
+    else if(i===wizCur) dot.classList.add('current');
+  }
+}
+
+function pickType(el){
+  var siblings=el.parentElement.querySelectorAll('.type-opt');
+  for(var i=0;i<siblings.length;i++) siblings[i].classList.remove('on');
+  el.classList.add('on');
+}
+
+// Help center
+function toggleHelp(card){
+  var content=card.querySelector('.help-content');
+  var isOpen=card.classList.contains('open');
+  card.classList.toggle('open');
+  content.style.display=isOpen?'none':'block';
+}
+function toggleFaq(el){
+  el.classList.toggle('open');
+}
+
+function toggleSmsConfig(show){
+  var block=document.getElementById('smsConfigBlock');
+  if(block) block.style.display=show?'block':'none';
+}
+
+function pickProvider(el){
+  var items=document.querySelectorAll('.sms-provider');
+  for(var i=0;i<items.length;i++) items[i].classList.remove('selected');
+  el.classList.add('selected');
+}
+
+function testSms(btn){
+  var orig=btn.textContent;
+  btn.disabled=true;
+  btn.style.opacity='.6';
+  // Simulate sending
+  var result=document.getElementById('smsTestResult');
+  result.style.display='none';
+  setTimeout(function(){
+    result.style.display='flex';
+    result.style.gap='10px';
+    result.style.alignItems='center';
+    result.style.background='var(--success-bg)';
+    result.style.color='var(--success)';
+    result.textContent='SMS de test envoye avec succes. Verifiez votre telephone.';
+    btn.disabled=false;
+    btn.style.opacity='1';
+  },1500);
+}
+
+// Login / Logout
+function doLogin(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  setTimeout(function(){document.getElementById('app').classList.add('visible')},150);
+}
+function doLogout(){
+  document.getElementById('app').classList.remove('visible');
+  setTimeout(function(){
+    document.getElementById('loginScreen').classList.remove('hidden');
+    // Reset to dashboard
+    var s=document.querySelectorAll('.screen');
+    for(var i=0;i<s.length;i++) s[i].classList.remove('active');
+    document.getElementById('s-dashboard').classList.add('active');
+    document.getElementById('topTitle').textContent='Tableau de bord';
+    document.getElementById('topSearch').style.display='block';
+    var n=document.querySelectorAll('.sb-item');
+    for(var i=0;i<n.length;i++) n[i].classList.remove('active');
+    if(n[0]) n[0].classList.add('active');
+  },300);
+}
+
+var titles={'dashboard':'Tableau de bord','calendar':'Calendrier des rendez-vous','new-apt':'Prise de rendez-vous','new-patient':'Nouveau patient','patients':'Liste des patients','patient-file':'Fiche patient','asc':'Module ASC','reminders':'Gestion des rappels','settings':'Parametres','help':'Centre d\'aide','profile':'Mon profil','users':'Gestion des utilisateurs'};
+var noSearch={'help':1,'settings':1,'new-patient':1,'new-apt':1,'profile':1,'users':1};
+function go(id,el){
+  var s=document.querySelectorAll('.screen');for(var i=0;i<s.length;i++)s[i].classList.remove('active');
+  document.getElementById('s-'+id).classList.add('active');
+  var n=document.querySelectorAll('.sb-item');for(var i=0;i<n.length;i++)n[i].classList.remove('active');
+  if(el)el.classList.add('active');
+  document.getElementById('topTitle').textContent=titles[id]||'MaSante';
+  document.getElementById('topSearch').style.display=noSearch[id]?'none':'block';
+}
+
+function pickSlot(el){if(el.classList.contains('off'))return;var s=document.querySelectorAll('.slot');for(var i=0;i<s.length;i++)s[i].classList.remove('picked');el.classList.add('picked');}
+function pickRadio(el){var s=el.parentElement.querySelectorAll('.radio-btn');for(var i=0;i<s.length;i++)s[i].classList.remove('on');el.classList.add('on');}
+function calView(btn){var b=document.querySelectorAll('.cal-tbtn');for(var i=0;i<b.length;i++)b[i].classList.remove('active');btn.classList.add('active');}
+
+var online=true;
+function toggleNet(){
+  online=!online;
+  var b=document.getElementById('cBadge');
+  var t=document.getElementById('cText');
+  if(online){b.className='topbar-badge online';t.textContent='En ligne';}
+  else{b.className='topbar-badge offline';t.textContent='Hors ligne';}
+}
+
+function toggleNotif(){
+  document.getElementById('notifPanel').classList.toggle('open');
+  document.getElementById('notifOverlay').classList.toggle('open');
+}
+
+function toggleSw(el){
+  if(el.classList.contains('on')){el.classList.remove('on');el.classList.add('off');}
+  else{el.classList.remove('off');el.classList.add('on');}
+}
+
+// Build status bars
+(function(){
+  var c=document.getElementById('statusBars');if(!c)return;
+  var data=[{l:'Confirmes',n:24,p:'63%',col:'var(--success)'},{l:'En attente',n:8,p:'21%',col:'var(--warning)'},{l:'Manques',n:4,p:'11%',col:'var(--danger)'},{l:'Termines',n:2,p:'5%',col:'var(--info)'}];
+  data.forEach(function(d){
+    var r=document.createElement('div');r.className='pbar-row';
+    var l=document.createElement('span');l.className='pbar-label';l.textContent=d.l;
+    var v=document.createElement('span');v.className='pbar-val';v.style.color=d.col;v.textContent=d.n;
+    var t=document.createElement('div');t.className='pbar-track';
+    var f=document.createElement('div');f.className='pbar-fill';f.style.width=d.p;f.style.background=d.col;
+    t.appendChild(f);r.appendChild(l);r.appendChild(v);r.appendChild(t);c.appendChild(r);
+  });
+})();
+
+// Build summary
+(function(){
+  var c=document.getElementById('summaryCard');if(!c)return;
+  var h=document.createElement('h3');h.textContent='Resume du rendez-vous';h.style.cssText="font-size:.95rem;color:var(--gray-900);margin-bottom:14px";
+  c.appendChild(h);
+  var g=document.createElement('div');g.className='sc-grid';
+  var items=[['Patient','Essomba Nathalie'],['Date','15 Avril 2026'],['Heure','10:00'],['Type','Consultation de suivi'],['Rappel','SMS'],['Risque','Faible']];
+  items.forEach(function(it){
+    var d=document.createElement('div');
+    var l=document.createElement('div');l.className='sc-label';l.textContent=it[0];
+    var v=document.createElement('div');v.className='sc-val';v.textContent=it[1];
+    d.appendChild(l);d.appendChild(v);g.appendChild(d);
+  });
+  c.appendChild(g);
+  var b=document.createElement('button');b.className='btn btn-primary';b.style.marginTop='16px';
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('style','width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5');
+  var u=document.createElementNS('http://www.w3.org/2000/svg','use');
+  u.setAttributeNS('http://www.w3.org/1999/xlink','href','#i-check');
+  svg.appendChild(u);b.appendChild(svg);
+  var txt=document.createTextNode(' Confirmer le rendez-vous');b.appendChild(txt);
+  c.appendChild(b);
+})();
+
+// Build config toggles
+(function(){
+  var c=document.getElementById('cfgToggles');if(!c)return;
+  var configs=[{n:'Rappel J-7',d:'7 jours avant le RDV',on:true},{n:'Rappel J-2',d:'2 jours avant le RDV',on:true},{n:'Rappel jour J',d:'Le matin du RDV a 7h',on:false}];
+  configs.forEach(function(cfg){
+    var row=document.createElement('div');row.className='toggle-row';
+    var info=document.createElement('div');
+    var name=document.createElement('div');name.className='toggle-name';name.textContent=cfg.n;
+    var desc=document.createElement('div');desc.className='toggle-desc';desc.textContent=cfg.d;
+    info.appendChild(name);info.appendChild(desc);
+    var sw=document.createElement('div');sw.className='toggle-sw '+(cfg.on?'on':'off');sw.onclick=function(){toggleSw(this)};
+    var knob=document.createElement('div');knob.className='toggle-knob';
+    sw.appendChild(knob);row.appendChild(info);row.appendChild(sw);c.appendChild(row);
+  });
+})();
+
+// Language picker
+function pickLang(el){
+  var siblings=el.parentElement.querySelectorAll('.r-opt');
+  for(var i=0;i<siblings.length;i++) siblings[i].classList.remove('on');
+  el.classList.add('on');
+}
+
+// Modal
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  document.getElementById(id+'Overlay').classList.add('open');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  document.getElementById(id+'Overlay').classList.remove('open');
+}
+</script>
+
+<!-- ════════════════════════════════
+     MODAL: SORTIE DU PROGRAMME
+     ════════════════════════════════ -->
+<style>
+.modal-overlay {
+  position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:2000;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.modal-overlay.open { opacity:1;pointer-events:auto; }
+.modal {
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+  width:520px;max-height:85vh;overflow-y:auto;
+  background:var(--white);border-radius:var(--radius-xl);
+  box-shadow:0 20px 60px rgba(0,0,0,.15);
+  z-index:2001;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;
+}
+.modal.open { opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1); }
+.modal-head {
+  padding:20px 24px;border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-head h3 { font-size:1rem;display:flex;align-items:center;gap:8px; }
+.modal-head h3 svg { width:18px;height:18px;stroke:var(--gray-400);fill:none;stroke-width:1.5; }
+.modal-body { padding:20px 24px; }
+.modal-footer { padding:16px 24px;border-top:1px solid var(--gray-100);display:flex;gap:10px;justify-content:flex-end; }
+.modal-footer .btn { width:auto; }
+
+.exit-option {
+  padding:14px 16px;border:1.5px solid var(--gray-200);border-radius:var(--radius);
+  margin-bottom:10px;cursor:pointer;transition:var(--ease);
+  display:flex;align-items:flex-start;gap:12px;
+}
+.exit-option:hover { border-color:var(--gray-300);background:var(--gray-25); }
+.exit-option.selected { border-color:var(--primary);background:var(--primary-subtle); }
+.exit-radio {
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--gray-300);
+  flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;
+  transition:var(--ease);
+}
+.exit-option.selected .exit-radio { border-color:var(--primary); }
+.exit-option.selected .exit-radio::after {
+  content:'';width:8px;height:8px;border-radius:50%;background:var(--primary);
+}
+.exit-label { font-weight:600;font-size:.88rem;color:var(--gray-800); }
+.exit-desc { font-size:.78rem;color:var(--gray-400);margin-top:2px; }
+
+.warning-box {
+  background:var(--danger-bg);border:1px solid #e8c4c4;border-radius:var(--radius);
+  padding:14px 16px;margin-top:14px;
+  display:flex;gap:10px;align-items:flex-start;
+  font-size:.82rem;color:var(--danger);line-height:1.5;
+}
+.warning-box svg { width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;margin-top:1px; }
+</style>
+
+<div class="modal-overlay" id="exitModalOverlay" onclick="closeModal('exitModal')"></div>
+<div class="modal" id="exitModal">
+  <div class="modal-head">
+    <h3><svg><use href="#i-archive"/></svg> Sortie du programme</h3>
+    <button class="icon-btn" onclick="closeModal('exitModal')"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="modal-body">
+    <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:16px">Selectionnez le motif de sortie pour <strong style="color:var(--gray-900)">Essomba Nathalie</strong> (MS-2024-00342)</p>
+
+    <div class="exit-option" onclick="pickExit(this)">
+      <div class="exit-radio"></div>
+      <div><div class="exit-label">Deces</div><div class="exit-desc">Le patient est decede. Le dossier sera archive et retire des listes actives.</div></div>
+    </div>
+    <div class="exit-option" onclick="pickExit(this)">
+      <div class="exit-radio"></div>
+      <div><div class="exit-label">Transfert vers un autre centre</div><div class="exit-desc">Le patient continue son suivi dans un autre etablissement.</div></div>
+    </div>
+    <div class="exit-option" onclick="pickExit(this)">
+      <div class="exit-radio"></div>
+      <div><div class="exit-label">Abandon volontaire</div><div class="exit-desc">Le patient a choisi d'arreter son suivi malgre les tentatives de retention.</div></div>
+    </div>
+    <div class="exit-option" onclick="pickExit(this)">
+      <div class="exit-radio"></div>
+      <div><div class="exit-label">Perdu de vue definitif</div><div class="exit-desc">Impossible de retrouver le patient apres 90 jours et visites ASC repetees.</div></div>
+    </div>
+    <div class="exit-option" onclick="pickExit(this)">
+      <div class="exit-radio"></div>
+      <div><div class="exit-label">Guerison / Fin de traitement</div><div class="exit-desc">Le patient a termine son programme de suivi avec succes.</div></div>
+    </div>
+
+    <div class="form-group" style="margin-top:14px"><label>Date de sortie</label><input class="form-input" type="date" value="2026-04-08"></div>
+    <div class="form-group"><label>Notes</label><textarea class="form-input" rows="3" placeholder="Circonstances, observations, informations complementaires..."></textarea></div>
+
+    <div class="warning-box">
+      <svg><use href="#i-alert"/></svg>
+      <div>Cette action est irreversible. Le dossier sera archive et le patient sera retire de toutes les listes actives, des rappels et des assignations ASC. Un rapport sera genere automatiquement.</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('exitModal')">Annuler</button>
+    <button class="btn btn-primary" style="background:var(--danger)" onclick="closeModal('exitModal')"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-archive"/></svg> Confirmer la sortie</button>
+  </div>
+</div>
+
+<script>
+function pickExit(el){
+  var opts=document.querySelectorAll('.exit-option');
+  for(var i=0;i<opts.length;i++) opts[i].classList.remove('selected');
+  el.classList.add('selected');
+}
+</script>
+
+<!-- ════════════════════════════════
+     MODAL: POST-VISITE
+     ════════════════════════════════ -->
+<div class="modal-overlay" id="postVisitModalOverlay" onclick="closeModal('postVisitModal')"></div>
+<div class="modal" id="postVisitModal">
+  <div class="modal-head">
+    <h3><svg><use href="#i-clipboard"/></svg> Mise a jour du rendez-vous</h3>
+    <button class="icon-btn" onclick="closeModal('postVisitModal')"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="modal-body">
+    <div class="patient-card" style="margin-bottom:16px">
+      <div class="pc-head" style="margin-bottom:0">
+        <div class="avatar a1 lg" id="pvAvatar">EN</div>
+        <div class="item-info">
+          <div class="item-name" style="font-size:1rem" id="pvName">Essomba Nathalie</div>
+          <div class="item-sub" id="pvDetail">Consultation de suivi — 08 Avr 2026, 08:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Statut du rendez-vous</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div class="exit-option" onclick="pickVisitStatus(this,'ok')" style="margin-bottom:0">
+          <div class="exit-radio"></div>
+          <div><div class="exit-label" style="color:var(--success)">Termine</div><div class="exit-desc">Le patient est venu, la visite est faite</div></div>
+        </div>
+        <div class="exit-option" onclick="pickVisitStatus(this,'miss')" style="margin-bottom:0">
+          <div class="exit-radio"></div>
+          <div><div class="exit-label" style="color:var(--danger)">Manque</div><div class="exit-desc">Le patient n'est pas venu</div></div>
+        </div>
+        <div class="exit-option" onclick="pickVisitStatus(this,'cancel')" style="margin-bottom:0">
+          <div class="exit-radio"></div>
+          <div><div class="exit-label">Annule</div><div class="exit-desc">RDV annule par le patient ou le centre</div></div>
+        </div>
+        <div class="exit-option" onclick="pickVisitStatus(this,'report')" style="margin-bottom:0">
+          <div class="exit-radio"></div>
+          <div><div class="exit-label" style="color:var(--warning)">Reporte</div><div class="exit-desc">Decale a une autre date</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section post-visite (visible si Termine) -->
+    <div id="postVisitFields" style="display:none">
+      <div class="form-group"><label>Notes de consultation</label><textarea class="form-input" rows="3" placeholder="Observations, resultats, decisions prises..."></textarea></div>
+      <div class="form-group"><label>Programmer le prochain RDV</label>
+        <div class="setup-grid">
+          <div class="form-group" style="margin-bottom:0"><label style="font-size:.72rem">Date</label><input class="form-input" type="date" value="2026-07-08"></div>
+          <div class="form-group" style="margin-bottom:0"><label style="font-size:.72rem">Type</label><select class="form-input"><option>Consultation de suivi</option><option>Retrait medicaments</option><option>Bilan sanguin</option><option>Club d'adherence</option></select></div>
+        </div>
+      </div>
+      <div class="form-group"><label>Frequence de suivi</label>
+        <div class="type-options">
+          <div class="type-opt" onclick="pickType(this)">Mensuel</div>
+          <div class="type-opt on" onclick="pickType(this)">Trimestriel</div>
+          <div class="type-opt" onclick="pickType(this)">Semestriel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section manque (visible si Manque) -->
+    <div id="missedFields" style="display:none">
+      <div class="form-group"><label>Action a entreprendre</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+          <div class="toggle-row" style="padding:8px 0"><div><div class="toggle-name">Envoyer un rappel SMS</div><div class="toggle-desc">Message automatique au patient</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row" style="padding:8px 0"><div><div class="toggle-name">Assigner un ASC</div><div class="toggle-desc">Visite a domicile par un agent communautaire</div></div><div class="toggle-sw off" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+          <div class="toggle-row" style="padding:8px 0;border-bottom:none"><div><div class="toggle-name">Reprogrammer automatiquement</div><div class="toggle-desc">Proposer un nouveau creneau dans 7 jours</div></div><div class="toggle-sw on" onclick="toggleSw(this)"><div class="toggle-knob"></div></div></div>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea class="form-input" rows="2" placeholder="Raison connue, tentatives de contact..."></textarea></div>
+    </div>
+
+    <!-- Section reporte (visible si Reporte) -->
+    <div id="reportFields" style="display:none">
+      <div class="form-group"><label>Nouvelle date</label><input class="form-input" type="date"></div>
+      <div class="form-group"><label>Raison</label><select class="form-input"><option>Demande du patient</option><option>Medecin indisponible</option><option>Probleme de transport</option><option>Autre</option></select></div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('postVisitModal')">Annuler</button>
+    <button class="btn btn-primary" style="background:var(--primary)" onclick="closeModal('postVisitModal')"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Valider</button>
+  </div>
+</div>
+
+<script>
+function openPostVisit(name,detail){
+  document.getElementById('pvName').textContent=name;
+  document.getElementById('pvDetail').textContent=detail;
+  var initials=name.split(' ').map(function(w){return w[0]}).join('');
+  document.getElementById('pvAvatar').textContent=initials;
+  // Reset fields
+  document.getElementById('postVisitFields').style.display='none';
+  document.getElementById('missedFields').style.display='none';
+  document.getElementById('reportFields').style.display='none';
+  var opts=document.querySelectorAll('#postVisitModal .exit-option');
+  for(var i=0;i<opts.length;i++) opts[i].classList.remove('selected');
+  openModal('postVisitModal');
+}
+
+function pickVisitStatus(el,type){
+  var opts=el.parentElement.querySelectorAll('.exit-option');
+  for(var i=0;i<opts.length;i++) opts[i].classList.remove('selected');
+  el.classList.add('selected');
+  // Show/hide relevant fields
+  document.getElementById('postVisitFields').style.display = type==='ok'?'block':'none';
+  document.getElementById('missedFields').style.display = type==='miss'?'block':'none';
+  document.getElementById('reportFields').style.display = type==='report'?'block':'none';
+}
+
+// Calendar event click — open post-visit modal directly
+document.addEventListener('DOMContentLoaded',function(){
+  var evts=document.querySelectorAll('.cal-evt');
+  for(var i=0;i<evts.length;i++){
+    evts[i].addEventListener('click',function(){
+      var name=this.textContent.trim();
+      openPostVisit(name,'Rendez-vous — Calendrier');
+    });
+  }
+});
+</script>
+
+<!-- ════════════════════════════════
+     MODAL: AJOUTER UTILISATEUR
+     ════════════════════════════════ -->
+<div class="modal-overlay" id="addUserModalOverlay" onclick="closeModal('addUserModal')"></div>
+<div class="modal" id="addUserModal">
+  <div class="modal-head">
+    <h3><svg><use href="#i-user-plus"/></svg> Ajouter un utilisateur</h3>
+    <button class="icon-btn" onclick="closeModal('addUserModal')"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="modal-body">
+    <div class="setup-grid">
+      <div class="form-group"><label>Nom complet</label><input class="form-input" type="text" placeholder="Ex: Ngassa Marie"></div>
+      <div class="form-group"><label>Email</label><input class="form-input" type="email" placeholder="Ex: ngassa@mail.cm"></div>
+      <div class="form-group"><label>Identifiant de connexion</label><input class="form-input" type="text" placeholder="Ex: ngassa.m"></div>
+      <div class="form-group"><label>Telephone</label><input class="form-input" type="tel" placeholder="+237 6XX XXX XXX"></div>
+      <div class="form-group setup-full"><label>Role</label>
+        <div class="type-options">
+          <div class="type-opt" onclick="pickType(this)">Admin</div>
+          <div class="type-opt" onclick="pickType(this)">Medecin</div>
+          <div class="type-opt" onclick="pickType(this)">Infirmier</div>
+          <div class="type-opt on" onclick="pickType(this)">ASC</div>
+        </div>
+      </div>
+      <div class="form-group"><label>Mot de passe temporaire</label><input class="form-input" type="password" placeholder="Minimum 8 caracteres"></div>
+      <div class="form-group"><label>Confirmer</label><input class="form-input" type="password" placeholder="Retapez le mot de passe"></div>
+    </div>
+    <div style="margin-top:12px;padding:12px 16px;background:var(--info-bg);border-radius:var(--radius);font-size:.82rem;color:var(--info);line-height:1.5;display:flex;gap:10px;align-items:flex-start">
+      <svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;margin-top:1px"><use href="#i-alert"/></svg>
+      <div>L'utilisateur devra changer son mot de passe a sa premiere connexion. Il n'aura acces qu'aux fonctionnalites correspondant a son role.</div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('addUserModal')">Annuler</button>
+    <button class="btn btn-primary" onclick="closeModal('addUserModal')"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Creer le compte</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MODAL: MODIFIER UTILISATEUR
+     ════════════════════════════════ -->
+<div class="modal-overlay" id="editUserModalOverlay" onclick="closeModal('editUserModal')"></div>
+<div class="modal" id="editUserModal">
+  <div class="modal-head">
+    <h3><svg><use href="#i-edit"/></svg> Modifier l'utilisateur</h3>
+    <button class="icon-btn" onclick="closeModal('editUserModal')"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="modal-body">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--gray-50)">
+      <div class="avatar a2 lg">NM</div>
+      <div><div style="font-weight:700;font-size:1rem">Ngassa Marie</div><div style="color:var(--gray-400);font-size:.82rem">ngassa.m — Creee le 15 Jan 2024</div></div>
+    </div>
+    <div class="setup-grid">
+      <div class="form-group"><label>Nom complet</label><input class="form-input" type="text" value="Ngassa Marie"></div>
+      <div class="form-group"><label>Email</label><input class="form-input" type="email" value="ngassa@mail.cm"></div>
+      <div class="form-group"><label>Identifiant</label><input class="form-input" type="text" value="ngassa.m"></div>
+      <div class="form-group"><label>Telephone</label><input class="form-input" type="tel" value="+237 6XX XXX XXX"></div>
+      <div class="form-group setup-full"><label>Role</label>
+        <div class="type-options">
+          <div class="type-opt" onclick="pickType(this)">Admin</div>
+          <div class="type-opt" onclick="pickType(this)">Medecin</div>
+          <div class="type-opt" onclick="pickType(this)">Infirmier</div>
+          <div class="type-opt on" onclick="pickType(this)">ASC</div>
+        </div>
+      </div>
+      <div class="form-group setup-full"><label>Statut</label>
+        <div class="type-options">
+          <div class="type-opt on" onclick="pickType(this)">Actif</div>
+          <div class="type-opt" onclick="pickType(this)">En conge</div>
+          <div class="type-opt" onclick="pickType(this)">Desactive</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--gray-50)">
+      <button class="btn btn-secondary" style="width:auto;color:var(--gray-400)"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-shield"/></svg> Reinitialiser le mot de passe</button>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal('editUserModal')">Annuler</button>
+    <button class="btn btn-primary" onclick="closeModal('editUserModal')"><svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5"><use href="#i-check"/></svg> Enregistrer</button>
+  </div>
+</div>
+<script type="module" src="/static/js/connect.js"></script>
 </body>
 </html>
