@@ -52,6 +52,15 @@ func (s *Server) handleCreatePatient(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	channel := domain.ReminderChannel(req.ReminderChannel)
+	if channel == "" {
+		channel = domain.ChannelSMS
+	}
+	lang := req.Language
+	if lang == "" {
+		lang = "fr"
+	}
+
 	p := &domain.Patient{
 		LastName:        req.LastName,
 		FirstName:       req.FirstName,
@@ -60,8 +69,8 @@ func (s *Server) handleCreatePatient(w http.ResponseWriter, r *http.Request) {
 		PhoneSecondary:  req.PhoneSecondary,
 		District:        req.District,
 		Address:         req.Address,
-		Language:        req.Language,
-		ReminderChannel: domain.ReminderChannel(req.ReminderChannel),
+		Language:        lang,
+		ReminderChannel: channel,
 		ContactName:     req.ContactName,
 		ContactPhone:    req.ContactPhone,
 		ContactRelation: req.ContactRelation,
@@ -75,7 +84,7 @@ func (s *Server) handleCreatePatient(w http.ResponseWriter, r *http.Request) {
 
 	user := UserFromContext(r.Context())
 	if err := s.patientSvc.Create(r.Context(), p, user.ID); err != nil {
-		writeError(w, http.StatusInternalServerError, "erreur lors de l'inscription")
+		internalError(w, err)
 		return
 	}
 
