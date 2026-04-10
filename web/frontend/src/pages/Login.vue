@@ -30,7 +30,7 @@ async function login() {
   <div style="position:fixed;inset:0;display:flex;z-index:100">
     <div style="flex:1;background:var(--primary);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff">
       <div style="text-align:center">
-        <div style="width:80px;height:80px;border:2px solid rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;background:rgba(255,255,255,.06);font-size:2.5rem">&#127807;</div>
+        <div style="width:80px;height:80px;border:2px solid rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;background:rgba(255,255,255,.06);"><svg width="36" height="36" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" opacity=".3"/><path d="M16 8v16M8 16h16"/><circle cx="16" cy="16" r="3" fill="rgba(255,255,255,.7)" stroke="none" opacity=".5"/></svg></div>
         <h1 style="font-size:2.8rem;font-weight:700;letter-spacing:-1.5px;margin-bottom:8px">MaSante</h1>
         <p style="font-size:1rem;color:rgba(255,255,255,.5)">Plateforme de suivi sante communautaire</p>
       </div>

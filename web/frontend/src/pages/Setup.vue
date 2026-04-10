@@ -121,7 +121,7 @@ const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
   <div style="position:fixed;inset:0;display:flex;flex-direction:column;background:var(--white);z-index:100">
     <!-- Header -->
     <div class="setup-header">
-      <div class="sh-logo">&#127807;</div>
+      <div class="sh-logo"><svg width="18" height="18" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="12" opacity=".3"/><path d="M16 8v16M8 16h16"/><circle cx="16" cy="16" r="3" fill="rgba(255,255,255,.7)" stroke="none" opacity=".5"/></svg></div>
       <h2>Configuration de MaSante</h2>
       <span class="sh-step">Etape {{ step }} sur {{ total }}</span>
     </div>
@@ -241,7 +241,7 @@ const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
         <!-- Step 5 -->
         <template v-if="step === 5">
           <div style="text-align:center;padding:40px 0">
-            <div style="width:72px;height:72px;border-radius:50%;background:var(--success-bg);color:var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem">&#10003;</div>
+            <div style="width:72px;height:72px;border-radius:50%;background:var(--success-bg);color:var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
             <h3 style="margin-bottom:10px">Votre plateforme est prete</h3>
             <p style="color:var(--gray-400)">Cliquez sur "Lancer MaSante" pour commencer.</p>
             <div class="setup-recap" style="text-align:left;margin-top:24px">
