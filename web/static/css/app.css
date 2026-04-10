@@ -974,3 +974,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 /* Full-page screens */
 .ms-fullpage{position:fixed;inset:0;z-index:10000;background:var(--white)}
+
+/* Form validation errors */
+.form-input.error,.form-input[style*="border-color: var(--danger)"]{border-color:var(--danger) !important}
+.form-input:focus{border-color:var(--primary-muted) !important}

@@ -10,6 +10,14 @@ function pill(status){const m={active:['pill-success','Actif'],a_surveiller:['pi
 function risk(score){const s=score||5;let cls='low',lbl='Faible';if(s>6){cls='high';lbl='Eleve'}else if(s>3){cls='med';lbl='Moyen'}const sp=el('span',{class:'risk '+cls});sp.appendChild(el('span',{class:'risk-dot'}));sp.appendChild(document.createTextNode(' '+lbl));return sp}
 function fmtDate(d){if(!d)return'—';const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}
 function fmtType(t){return{consultation:'Consultation',retrait_medicaments:'Retrait medicaments',bilan_sanguin:'Bilan sanguin',club_adherence:"Club d'adherence"}[t]||t||''}
+
+// ── Validation ──
+function validatePwd(pwd){if(!pwd||pwd.length<8)return'Le mot de passe doit contenir au moins 8 caracteres';if(!/\d/.test(pwd))return'Le mot de passe doit contenir au moins 1 chiffre';return null}
+function validateEmail(email){if(!email)return null;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return'Format email invalide';return null}
+function validatePhone(phone){if(!phone)return null;if(!/^\+?\d[\d\s\-]{6,}$/.test(phone))return'Format telephone invalide';return null}
+function markError(input,msg){input.style.borderColor='var(--danger)';input.title=msg||''}
+function clearError(input){input.style.borderColor='';input.title=''}
+function validateRequired(refMap,fields){for(const[id,label]of fields){const val=refMap[id];if(!val||!val.value.trim()){if(val)markError(val,label+' requis');return label+' requis'} else if(val)clearError(val)}return null}
 function initials(name){return(name||'??').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}
 function loading(){return el('div',{class:'ms-loading',text:'Chargement...'})}
 function empty(msg){return el('div',{class:'ms-empty',text:msg||'Aucun element'})}
@@ -302,9 +310,16 @@ async function pageSetup(c){
   function v(id){const e=refs[id];return e?e.value.trim():''}
   async function saveStep(){
     let res;
-    if(step===1){const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};const typeEl=$('#s-types .type-opt.on');
-      data.center={name:v('s-name'),type:typeEl?typeMap[typeEl.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'));if(!data.center.name||!data.center.country||!data.center.city)return'Nom, pays et ville requis';res=await setupApi.center(data.center)}
-    else if(step===2){data.admin={full_name:v('s-name2'),email:v('s-email'),username:v('s-user'),password:v('s-pwd'),title:v('s-title')};if(!data.admin.full_name||!data.admin.username||!data.admin.password)return'Nom, identifiant et mot de passe requis';if(v('s-pwd')!==v('s-pwd2'))return'Les mots de passe ne correspondent pas';res=await setupApi.admin(data.admin)}
+    if(step===1){
+      const reqErr=validateRequired(refs,[['s-name','Nom de l\'etablissement'],['s-city','Ville']]);if(reqErr)return reqErr;
+      const typeMap={"Hopital public":'hopital_public',"Centre de sante":'centre_sante',"Clinique privee":'clinique_privee'};const typeEl=$('#s-types .type-opt.on');
+      data.center={name:v('s-name'),type:typeEl?typeMap[typeEl.textContent]||'centre_sante':'centre_sante',country:v('s-country'),city:v('s-city'),district:v('s-district')};if(v('s-lat'))data.center.lat=parseFloat(v('s-lat'));if(v('s-lng'))data.center.lng=parseFloat(v('s-lng'));res=await setupApi.center(data.center)}
+    else if(step===2){
+      const reqErr=validateRequired(refs,[['s-name2','Nom complet'],['s-user','Identifiant'],['s-pwd','Mot de passe']]);if(reqErr)return reqErr;
+      const pwdErr=validatePwd(v('s-pwd'));if(pwdErr){markError(refs['s-pwd'],pwdErr);return pwdErr}else clearError(refs['s-pwd']);
+      if(v('s-pwd')!==v('s-pwd2')){markError(refs['s-pwd2'],'');return'Les mots de passe ne correspondent pas'}else clearError(refs['s-pwd2']);
+      const emailErr=validateEmail(v('s-email'));if(emailErr){markError(refs['s-email'],emailErr);return emailErr}
+      data.admin={full_name:v('s-name2'),email:v('s-email'),username:v('s-user'),password:v('s-pwd'),title:v('s-title')};res=await setupApi.admin(data.admin)}
     else if(step===3){const days=[];$$('.day-check.on').forEach((_,i)=>days.push(i+1));data.schedule={consultation_days:days.join(','),start_time:v('s-start'),end_time:v('s-end'),slot_duration:parseInt(v('s-slot'))||30,max_patients_day:parseInt(v('s-max'))||40};res=await setupApi.schedule(data.schedule)}
     else if(step===4){const en=$('#s-sms-enable .type-opt.on');const enabled=en&&en.textContent.indexOf('Oui')>=0;const provMap={"Africa's Talking":'africastalking','MTN':'mtn','Orange':'orange','Twilio':'twilio','Infobip':'infobip'};data.sms={enabled:enabled,provider:enabled?(provMap[v('s-sms-prov')]||''):'',api_key:v('s-sms-key'),api_secret:v('s-sms-sec'),sender_id:v('s-sms-sender')};res=await setupApi.sms(data.sms)}
     else if(step===5){res=await setupApi.complete();if(res.ok){toast('Configuration terminee !','success');return null}}
@@ -473,7 +488,11 @@ async function pageNewPatient(c){
   const errEl=el('div',{style:'display:none;padding:10px 14px;background:var(--danger-bg);color:var(--danger);border-radius:var(--radius);font-size:.85rem;margin-bottom:12px'});right.appendChild(errEl);
   const subBtn=el('button',{class:'btn btn-primary'});subBtn.appendChild(svg('check',16));subBtn.appendChild(document.createTextNode(' Inscrire le patient'));
   subBtn.onclick=async()=>{errEl.style.display='none';const body={last_name:f.last_name.v(),first_name:f.first_name.v(),date_of_birth:f.dob.v(),sex:f.sex.v(),phone:f.phone.v(),phone_secondary:f.phone2.v(),district:f.district.v(),address:f.address.v(),language:lang,reminder_channel:channel,contact_name:cf.contact_name.v(),contact_phone:cf.contact_phone.v(),contact_relation:cf.contact_rel.v(),referred_by:cf.referred.v()};
-    if(!body.last_name||!body.first_name||!body.sex){errEl.textContent='Nom, prenom et sexe requis';errEl.style.display='block';return}subBtn.disabled=true;const r=await pts.create(body);if(!r.ok){errEl.textContent=r.error;errEl.style.display='block';subBtn.disabled=false;return}toast('Patient inscrit — Code: '+(r.data.Code||''),'success');location.hash='#patients'};
+    if(!body.last_name){errEl.textContent='Le nom est requis';errEl.style.display='block';return}
+    if(!body.first_name){errEl.textContent='Le prenom est requis';errEl.style.display='block';return}
+    if(!body.sex){errEl.textContent='Le sexe est requis';errEl.style.display='block';return}
+    const phoneErr=validatePhone(body.phone);if(phoneErr){errEl.textContent=phoneErr;errEl.style.display='block';return}
+    subBtn.disabled=true;const r=await pts.create(body);if(!r.ok){errEl.textContent=r.error;errEl.style.display='block';subBtn.disabled=false;return}toast('Patient inscrit — Code: '+(r.data.Code||''),'success');location.hash='#patients'};
   right.appendChild(subBtn);grid.appendChild(right);c.appendChild(grid);
 }
 
@@ -612,7 +631,11 @@ function showAddUser(onDone){
   const mf=el('div',{class:'modal-footer'});
   const cb=el('button',{class:'btn btn-secondary',text:'Annuler',style:'width:auto'});cb.onclick=()=>{overlay.remove();modal.remove()};mf.appendChild(cb);
   const sb=el('button',{class:'btn btn-primary',text:'Creer',style:'width:auto'});
-  sb.onclick=async()=>{errEl.style.display='none';const d={full_name:fields['au-name'].value,email:fields['au-email'].value,username:fields['au-user'].value,password:fields['au-pwd'].value,role:rs.value};if(!d.full_name||!d.username||!d.password){errEl.textContent='Champs requis';errEl.style.display='block';return}const r=await usr.create(d);if(!r.ok){errEl.textContent=r.error;errEl.style.display='block';return}toast('Utilisateur cree','success');overlay.remove();modal.remove();onDone()};
+  sb.onclick=async()=>{errEl.style.display='none';const d={full_name:fields['au-name'].value,email:fields['au-email'].value,username:fields['au-user'].value,password:fields['au-pwd'].value,role:rs.value};
+    if(!d.full_name||!d.username||!d.password){errEl.textContent='Nom, identifiant et mot de passe requis';errEl.style.display='block';return}
+    const pwdErr=validatePwd(d.password);if(pwdErr){errEl.textContent=pwdErr;errEl.style.display='block';return}
+    const emailErr=validateEmail(d.email);if(emailErr){errEl.textContent=emailErr;errEl.style.display='block';return}
+    const r=await usr.create(d);if(!r.ok){errEl.textContent=r.error;errEl.style.display='block';return}toast('Utilisateur cree','success');overlay.remove();modal.remove();onDone()};
   mf.appendChild(sb);modal.appendChild(mf);overlay.onclick=()=>{overlay.remove();modal.remove()};
   document.body.appendChild(overlay);document.body.appendChild(modal);
 }
@@ -636,7 +659,11 @@ async function pageProfile(c){
   const pe=el('div',{style:'display:none;padding:8px 12px;background:var(--danger-bg);color:var(--danger);border-radius:var(--radius);font-size:.82rem;margin-top:8px'});
   [['Actuel',cp],['Nouveau',np],['Confirmer',cfp]].forEach(([l,i])=>{const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:l}));g.appendChild(i);b2.appendChild(g)});
   const cpBtn=el('button',{class:'btn btn-secondary',style:'width:auto;margin-top:8px'});cpBtn.appendChild(svg('shield',16));cpBtn.appendChild(document.createTextNode(' Changer'));
-  cpBtn.onclick=async()=>{pe.style.display='none';if(np.value!==cfp.value){pe.textContent='Mots de passe differents';pe.style.display='block';return}const r=await prof.changePwd(cp.value,np.value);if(r.ok)toast('Mot de passe change','success');else{pe.textContent=r.error;pe.style.display='block'}};
+  cpBtn.onclick=async()=>{pe.style.display='none';
+    if(!cp.value){pe.textContent='Mot de passe actuel requis';pe.style.display='block';return}
+    const pwdErr=validatePwd(np.value);if(pwdErr){pe.textContent=pwdErr;pe.style.display='block';return}
+    if(np.value!==cfp.value){pe.textContent='Les mots de passe ne correspondent pas';pe.style.display='block';return}
+    const r=await prof.changePwd(cp.value,np.value);if(r.ok)toast('Mot de passe change — reconnectez-vous','success');else{pe.textContent=r.error;pe.style.display='block'}};
   b2.appendChild(cpBtn);b2.appendChild(pe);c2.appendChild(b2);grid.appendChild(c2);c.appendChild(grid);
 }
 
