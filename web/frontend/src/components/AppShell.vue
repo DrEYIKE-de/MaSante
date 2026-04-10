@@ -53,11 +53,10 @@ async function logout() {
       <!-- Brand -->
       <div class="sb-brand">
         <div class="sb-logo">
-          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 4C10 8 6 14 8 22c1 4 4 6 8 6s7-2 8-6c2-8-2-14-8-18z"/>
-            <path d="M16 10v14" opacity=".5"/>
-            <path d="M16 14l5-2" opacity=".4"/>
-            <path d="M16 18l-4-2" opacity=".4"/>
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2" stroke-linecap="round">
+            <path d="M6 16c0-8 5-12 10-12s10 4 10 12-5 12-10 12S6 24 6 16z"/>
+            <path d="M16 6c3 4 3 10 0 14" opacity=".7"/>
+            <path d="M11 10c4 1 7 4 8 8" opacity=".6"/>
           </svg>
         </div>
         <div class="sb-brand-text">
