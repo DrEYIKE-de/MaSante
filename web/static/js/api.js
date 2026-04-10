@@ -1,93 +1,12 @@
-// api.js — HTTP client for MaSante REST API.
-const B = '/api/v1';
-
-async function req(method, path, body) {
-  try {
-    const opts = { method, headers: {}, credentials: 'same-origin' };
-    if (body !== undefined) {
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = JSON.stringify(body);
-    }
-    const res = await fetch(B + path, opts);
-    const data = await res.json().catch(() => null);
-    if (!res.ok) return { ok: false, status: res.status, error: (data && data.error) || 'Erreur', data: null };
-    return { ok: true, status: res.status, data, error: null };
-  } catch (e) {
-    return { ok: false, status: 0, error: 'Connexion impossible', data: null };
-  }
-}
-
-export const api = {
-  get: (p) => req('GET', p),
-  post: (p, b) => req('POST', p, b),
-  put: (p, b) => req('PUT', p, b),
-  del: (p) => req('DELETE', p),
-};
-
-export const setup = {
-  status: () => api.get('/setup/status'),
-  center: (d) => api.post('/setup/center', d),
-  admin: (d) => api.post('/setup/admin', d),
-  schedule: (d) => api.post('/setup/schedule', d),
-  sms: (d) => api.post('/setup/sms', d),
-  complete: () => api.post('/setup/complete', {}),
-};
-
-export const auth = {
-  login: (u, p) => api.post('/auth/login', { username: u, password: p }),
-  logout: () => api.post('/auth/logout', {}),
-  me: () => api.get('/auth/me'),
-};
-
-export const dashboard = {
-  stats: () => api.get('/dashboard/stats'),
-  today: () => api.get('/dashboard/today'),
-  overdue: () => api.get('/dashboard/overdue'),
-};
-
-export const patients = {
-  list: (params) => api.get('/patients' + (params ? '?' + params : '')),
-  search: (q) => api.get('/patients/search?q=' + encodeURIComponent(q)),
-  get: (id) => api.get('/patients/' + id),
-  create: (d) => api.post('/patients', d),
-  update: (id, d) => api.put('/patients/' + id, d),
-  exit: (id, d) => api.put('/patients/' + id + '/exit', d),
-};
-
-export const appointments = {
-  create: (d) => api.post('/appointments', d),
-  get: (id) => api.get('/appointments/' + id),
-  complete: (id, d) => api.put('/appointments/' + id + '/complete', d),
-  missed: (id, d) => api.put('/appointments/' + id + '/missed', d),
-  reschedule: (id, d) => api.put('/appointments/' + id + '/reschedule', d),
-  cancel: (id) => api.del('/appointments/' + id),
-  slots: (date) => api.get('/appointments/slots?date=' + date),
-};
-
-export const calendar = {
-  week: (date) => api.get('/calendar/week?date=' + date),
-};
-
-export const reminders = {
-  list: () => api.get('/reminders'),
-  stats: () => api.get('/reminders/stats'),
-  templates: () => api.get('/reminders/templates'),
-  updateTemplate: (id, d) => api.put('/reminders/templates/' + id, d),
-  test: (to, msg) => api.post('/reminders/test', { to, message: msg }),
-  sendAll: () => api.post('/reminders/send-all', {}),
-};
-
-export const users = {
-  list: () => api.get('/users'),
-  create: (d) => api.post('/users', d),
-  update: (id, d) => api.put('/users/' + id, d),
-  disable: (id) => api.del('/users/' + id),
-  resetPassword: (id, p) => api.put('/users/' + id + '/reset-password', { password: p }),
-};
-
-export const profile = {
-  get: () => api.get('/profile'),
-  update: (d) => api.put('/profile', d),
-  changePassword: (cur, nw) => api.put('/profile/password', { current_password: cur, new_password: nw }),
-  activity: () => api.get('/profile/activity'),
-};
+const B='/api/v1';
+async function r(m,p,b){try{const o={method:m,headers:{},credentials:'same-origin'};if(b!==undefined){o.headers['Content-Type']='application/json';o.body=JSON.stringify(b)}const res=await fetch(B+p,o);const d=await res.json().catch(()=>null);if(!res.ok)return{ok:false,status:res.status,error:(d&&d.error)||'Erreur',data:null};return{ok:true,status:res.status,data:d,error:null}}catch(e){return{ok:false,status:0,error:'Connexion impossible',data:null}}}
+export const api={get:p=>r('GET',p),post:(p,b)=>r('POST',p,b),put:(p,b)=>r('PUT',p,b),del:p=>r('DELETE',p)};
+export const setup={status:()=>api.get('/setup/status'),center:d=>api.post('/setup/center',d),admin:d=>api.post('/setup/admin',d),schedule:d=>api.post('/setup/schedule',d),sms:d=>api.post('/setup/sms',d),complete:()=>api.post('/setup/complete',{})};
+export const auth={login:(u,p)=>api.post('/auth/login',{username:u,password:p}),logout:()=>api.post('/auth/logout',{}),me:()=>api.get('/auth/me')};
+export const dash={stats:()=>api.get('/dashboard/stats'),today:()=>api.get('/dashboard/today'),overdue:()=>api.get('/dashboard/overdue')};
+export const pts={list:q=>api.get('/patients'+(q?'?'+q:'')),search:q=>api.get('/patients/search?q='+encodeURIComponent(q)),get:id=>api.get('/patients/'+id),create:d=>api.post('/patients',d),update:(id,d)=>api.put('/patients/'+id,d),exit:(id,d)=>api.put('/patients/'+id+'/exit',d)};
+export const apts={create:d=>api.post('/appointments',d),get:id=>api.get('/appointments/'+id),complete:(id,d)=>api.put('/appointments/'+id+'/complete',d),missed:(id,d)=>api.put('/appointments/'+id+'/missed',d),reschedule:(id,d)=>api.put('/appointments/'+id+'/reschedule',d),cancel:id=>api.del('/appointments/'+id),slots:dt=>api.get('/appointments/slots?date='+dt)};
+export const cal={week:dt=>api.get('/calendar/week?date='+dt)};
+export const rem={list:()=>api.get('/reminders'),stats:()=>api.get('/reminders/stats'),templates:()=>api.get('/reminders/templates'),updateTpl:(id,d)=>api.put('/reminders/templates/'+id,d),test:(to,msg)=>api.post('/reminders/test',{to,message:msg}),sendAll:()=>api.post('/reminders/send-all',{})};
+export const usr={list:()=>api.get('/users'),create:d=>api.post('/users',d),update:(id,d)=>api.put('/users/'+id,d),disable:id=>api.del('/users/'+id),resetPwd:(id,p)=>api.put('/users/'+id+'/reset-password',{password:p})};
+export const prof={get:()=>api.get('/profile'),update:d=>api.put('/profile',d),changePwd:(c,n)=>api.put('/profile/password',{current_password:c,new_password:n}),activity:()=>api.get('/profile/activity')};
