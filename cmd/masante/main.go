@@ -26,6 +26,7 @@ var version = "dev"
 
 func main() {
 	port := flag.Int("port", 8080, "Port HTTP")
+	host := flag.String("host", "127.0.0.1", "Adresse d'ecoute (127.0.0.1 = local, 0.0.0.0 = reseau)")
 	dataDir := flag.String("data-dir", "./masante-data", "Repertoire des donnees")
 	showVersion := flag.Bool("version", false, "Afficher la version")
 	flag.Parse()
@@ -35,7 +36,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := os.MkdirAll(*dataDir, 0755); err != nil {
+	if err := os.MkdirAll(*dataDir, 0700); err != nil {
 		log.Fatalf("impossible de creer %s: %v", *dataDir, err)
 	}
 
@@ -92,7 +93,7 @@ func main() {
 	fmt.Println("[masante] Routes enregistrees")
 
 	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", *port),
+		Addr:         fmt.Sprintf("%s:%d", *host, *port),
 		Handler:      srv,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,

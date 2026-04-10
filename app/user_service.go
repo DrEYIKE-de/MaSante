@@ -135,7 +135,12 @@ func (s *UserService) ChangePassword(ctx context.Context, id int64, currentPwd, 
 
 	u.PasswordHash = hash
 	u.MustChangePwd = false
-	return s.users.Update(ctx, u)
+	if err := s.users.Update(ctx, u); err != nil {
+		return err
+	}
+	// Revoke all existing sessions — the user must re-login.
+	_ = s.sessions.DeleteByUserID(ctx, id)
+	return nil
 }
 
 // UpdateProfile lets a user update their own non-sensitive fields.

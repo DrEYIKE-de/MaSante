@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/masante/masante/domain"
@@ -16,7 +17,9 @@ type ReminderService struct {
 	patients     domain.PatientRepository
 	smsConfig    domain.SMSConfigRepository
 	center       domain.CenterRepository
-	provider     domain.SMSProvider
+
+	mu       sync.RWMutex
+	provider domain.SMSProvider
 }
 
 // NewReminderService returns a new ReminderService.
@@ -38,7 +41,15 @@ func NewReminderService(
 
 // SetProvider injects the SMS provider at runtime (after setup or config reload).
 func (s *ReminderService) SetProvider(p domain.SMSProvider) {
+	s.mu.Lock()
 	s.provider = p
+	s.mu.Unlock()
+}
+
+func (s *ReminderService) getProvider() domain.SMSProvider {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.provider
 }
 
 // GenerateReminders creates reminder records for upcoming appointments
@@ -136,7 +147,8 @@ func (s *ReminderService) GenerateReminders(ctx context.Context) error {
 
 // ProcessQueue sends all pending reminders whose scheduled time has passed.
 func (s *ReminderService) ProcessQueue(ctx context.Context) error {
-	if s.provider == nil {
+	p := s.getProvider()
+	if p == nil {
 		return nil
 	}
 
@@ -159,7 +171,7 @@ func (s *ReminderService) ProcessQueue(ctx context.Context) error {
 			continue
 		}
 
-		providerID, err := s.provider.Send(ctx, patient.Phone, r.Message)
+		providerID, err := p.Send(ctx, patient.Phone, r.Message)
 		now := time.Now()
 		r.SentAt = &now
 
@@ -180,7 +192,8 @@ func (s *ReminderService) ProcessQueue(ctx context.Context) error {
 
 // RetryFailed retries failed reminders up to 3 attempts with backoff.
 func (s *ReminderService) RetryFailed(ctx context.Context) error {
-	if s.provider == nil {
+	p := s.getProvider()
+	if p == nil {
 		return nil
 	}
 
@@ -200,7 +213,7 @@ func (s *ReminderService) RetryFailed(ctx context.Context) error {
 			continue
 		}
 
-		providerID, err := s.provider.Send(ctx, patient.Phone, r.Message)
+		providerID, err := p.Send(ctx, patient.Phone, r.Message)
 		now := time.Now()
 		r.SentAt = &now
 		r.RetryCount++
@@ -241,10 +254,11 @@ func (s *ReminderService) UpdateTemplate(ctx context.Context, t *domain.MessageT
 
 // SendTest sends a one-off test SMS to verify provider configuration.
 func (s *ReminderService) SendTest(ctx context.Context, to, message string) error {
-	if s.provider == nil {
+	p := s.getProvider()
+	if p == nil {
 		return domain.ErrSMSProviderDown
 	}
-	_, err := s.provider.Send(ctx, to, message)
+	_, err := p.Send(ctx, to, message)
 	return err
 }
 

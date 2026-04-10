@@ -1,6 +1,22 @@
-# MaSante
+<p align="center">
+  <img src="docs/logo.svg" alt="MaSante" width="80" height="80">
+  <br>
+  <strong style="font-size: 1.5em;">MaSante</strong>
+</p>
 
-**Free, open-source appointment scheduling platform for health clinics in Africa.**
+<p align="center">
+  <strong>Free, open-source appointment scheduling platform for health clinics in Africa.</strong>
+  <br><br>
+  <a href="https://masante.africa">Website</a> · <a href="#quick-start">Quick Start</a> · <a href="#api-endpoints">API Docs</a> · <a href="#contributing">Contributing</a>
+  <br><br>
+  <img src="https://img.shields.io/badge/license-open--source-green" alt="License">
+  <img src="https://img.shields.io/badge/go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/database-SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/tests-78%20passing-brightgreen" alt="Tests">
+</p>
+
+---
 
 MaSante helps health centers manage patient appointments, send SMS reminders, and track community health worker visits — all from a single binary with zero external dependencies.
 
