@@ -21,6 +21,7 @@ var migrations = []string{
 		end_time        TEXT NOT NULL DEFAULT '16:00',
 		slot_duration   INTEGER NOT NULL DEFAULT 30,
 		max_patients_day INTEGER NOT NULL DEFAULT 40,
+		setup_step      INTEGER NOT NULL DEFAULT 0,
 		setup_complete  INTEGER NOT NULL DEFAULT 0,
 		created_at      TEXT NOT NULL DEFAULT (datetime('now')),
 		updated_at      TEXT NOT NULL DEFAULT (datetime('now'))

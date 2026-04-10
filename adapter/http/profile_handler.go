@@ -2,6 +2,8 @@ package http
 
 import (
 	"net/http"
+
+	"github.com/masante/masante/domain"
 )
 
 type updateProfileRequest struct {
@@ -49,8 +51,8 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "requete invalide")
 		return
 	}
-	if len(req.NewPassword) < 8 {
-		writeError(w, http.StatusBadRequest, "mot de passe trop court (8 caracteres minimum)")
+	if err := domain.ValidatePassword(req.NewPassword); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

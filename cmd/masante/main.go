@@ -16,11 +16,12 @@ import (
 
 	"github.com/masante/masante/adapter"
 	httpAdapter "github.com/masante/masante/adapter/http"
+	"github.com/masante/masante/adapter/sms"
 	"github.com/masante/masante/adapter/sqlite"
 	"github.com/masante/masante/app"
 )
 
-// version is set at build time via ldflags.
+// version is set at build time via LDFLAGS.
 var version = "dev"
 
 func main() {
@@ -44,11 +45,12 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := sqlite.Migrate(db); err != nil {
-		log.Fatalf("migration: %v", err)
+	if er := sqlite.Migrate(db); er != nil {
+		log.Fatalf("migration: %v", er)
 	}
 
 	// Driven adapters.
+	fmt.Println("[masante] Initialisation des adaptateurs...")
 	userRepo := sqlite.NewUserRepo(db)
 	sessionRepo := sqlite.NewSessionRepo(db)
 	centerRepo := sqlite.NewCenterRepo(db)
@@ -56,17 +58,38 @@ func main() {
 	auditRepo := sqlite.NewAuditRepo(db)
 	patientRepo := sqlite.NewPatientRepo(db)
 	appointmentRepo := sqlite.NewAppointmentRepo(db)
+	reminderRepo := sqlite.NewReminderRepo(db)
 	hasher := adapter.BcryptHasher{}
+	fmt.Println("[masante] Adaptateurs OK (sqlite, bcrypt)")
 
 	// Application services.
+	fmt.Println("[masante] Demarrage des services applicatifs...")
 	authSvc := app.NewAuthService(userRepo, sessionRepo, hasher, auditRepo)
 	setupSvc := app.NewSetupService(centerRepo, userRepo, smsConfigRepo, hasher, auditRepo)
 	patientSvc := app.NewPatientService(patientRepo, auditRepo)
 	appointmentSvc := app.NewAppointmentService(appointmentRepo, patientRepo, auditRepo)
 	userSvc := app.NewUserService(userRepo, sessionRepo, hasher, auditRepo)
+	reminderSvc := app.NewReminderService(reminderRepo, appointmentRepo, patientRepo, smsConfigRepo, centerRepo)
+	fmt.Println("[masante] Services OK (auth, setup, patient, appointment, user, reminder)")
+
+	// Load SMS provider if configured.
+	smsCfg, err := smsConfigRepo.Get(context.Background())
+	if err == nil && smsCfg.Enabled && smsCfg.Provider != "" {
+		provider, err := sms.NewProvider(*smsCfg)
+		if err != nil {
+			fmt.Printf("[masante] SMS provider %q: %v (rappels desactives)\n", smsCfg.Provider, err)
+		} else {
+			reminderSvc.SetProvider(provider)
+			fmt.Printf("[masante] SMS provider OK (%s)\n", provider.Name())
+		}
+	} else {
+		fmt.Println("[masante] SMS non configure (rappels desactives)")
+	}
 
 	// Driving adapter.
-	srv := httpAdapter.NewServer(authSvc, setupSvc, patientSvc, appointmentSvc, userSvc)
+	fmt.Println("[masante] Configuration du serveur HTTP...")
+	srv := httpAdapter.NewServer(authSvc, setupSvc, patientSvc, appointmentSvc, userSvc, reminderSvc)
+	fmt.Println("[masante] Routes enregistrees")
 
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
@@ -79,6 +102,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Session cleanup — every hour.
 	go func() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
@@ -88,6 +112,29 @@ func main() {
 				return
 			case <-ticker.C:
 				_ = authSvc.CleanExpiredSessions(context.Background())
+			}
+		}
+	}()
+
+	// Reminder scheduler — every 5 minutes.
+	go func() {
+		fmt.Println("[masante] Scheduler de rappels demarre (intervalle: 5 min)")
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := reminderSvc.GenerateReminders(context.Background()); err != nil {
+					log.Printf("[masante] generation rappels: %v", err)
+				}
+				if err := reminderSvc.ProcessQueue(context.Background()); err != nil {
+					log.Printf("[masante] envoi rappels: %v", err)
+				}
+				if err := reminderSvc.RetryFailed(context.Background()); err != nil {
+					log.Printf("[masante] retry rappels: %v", err)
+				}
 			}
 		}
 	}()

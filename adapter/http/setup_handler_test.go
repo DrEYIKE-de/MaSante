@@ -32,13 +32,16 @@ func testServer(t *testing.T) *Server {
 	patientRepo := sqlite.NewPatientRepo(db)
 	aptRepo := sqlite.NewAppointmentRepo(db)
 
+	reminderRepo := sqlite.NewReminderRepo(db)
+
 	authSvc := app.NewAuthService(userRepo, sessionRepo, hasher, auditRepo)
 	setupSvc := app.NewSetupService(centerRepo, userRepo, smsRepo, hasher, auditRepo)
 	patientSvc := app.NewPatientService(patientRepo, auditRepo)
 	aptSvc := app.NewAppointmentService(aptRepo, patientRepo, auditRepo)
 	userSvc := app.NewUserService(userRepo, sessionRepo, hasher, auditRepo)
+	reminderSvc := app.NewReminderService(reminderRepo, aptRepo, patientRepo, smsRepo, centerRepo)
 
-	return NewServer(authSvc, setupSvc, patientSvc, aptSvc, userSvc)
+	return NewServer(authSvc, setupSvc, patientSvc, aptSvc, userSvc, reminderSvc)
 }
 
 func TestSetupStatus_InitiallyFalse(t *testing.T) {
@@ -107,7 +110,7 @@ func TestSetup_BlockedAfterComplete(t *testing.T) {
 		body string
 	}{
 		{"/api/v1/setup/center", `{"name":"Test","type":"centre_sante","country":"Cameroun","city":"Douala"}`},
-		{"/api/v1/setup/admin", `{"full_name":"Admin","username":"admin","password":"longpassword","email":"a@b.cm"}`},
+		{"/api/v1/setup/admin", `{"full_name":"Admin","username":"admin","password":"longpassword1","email":"a@b.cm"}`},
 		{"/api/v1/setup/schedule", `{"consultation_days":"1,2,3,4,5","start_time":"08:00","end_time":"16:00","slot_duration":30,"max_patients_day":40}`},
 		{"/api/v1/setup/sms", `{"enabled":false}`},
 		{"/api/v1/setup/complete", `{}`},

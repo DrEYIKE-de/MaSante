@@ -4,11 +4,13 @@ package http
 
 import (
 	"encoding/json"
+	"io/fs"
 	"log"
 	"net/http"
 
 	"github.com/masante/masante/app"
 	"github.com/masante/masante/domain"
+	"github.com/masante/masante/web"
 )
 
 // Server is the HTTP driving adapter. It translates HTTP requests
@@ -20,6 +22,7 @@ type Server struct {
 	patientSvc     *app.PatientService
 	appointmentSvc *app.AppointmentService
 	userSvc        *app.UserService
+	reminderSvc    *app.ReminderService
 }
 
 // NewServer creates a Server and registers all routes.
@@ -29,6 +32,7 @@ func NewServer(
 	patientSvc *app.PatientService,
 	appointmentSvc *app.AppointmentService,
 	userSvc *app.UserService,
+	reminderSvc *app.ReminderService,
 ) *Server {
 	s := &Server{
 		mux:            http.NewServeMux(),
@@ -37,6 +41,7 @@ func NewServer(
 		patientSvc:     patientSvc,
 		appointmentSvc: appointmentSvc,
 		userSvc:        userSvc,
+		reminderSvc:    reminderSvc,
 	}
 	s.routes()
 	return s
@@ -100,6 +105,28 @@ func (s *Server) routes() {
 
 	// Calendar (authenticated).
 	s.mux.HandleFunc("GET /api/v1/calendar/week", s.requireAuth(s.handleCalendarWeek))
+
+	// Reminders (authenticated).
+	s.mux.HandleFunc("GET /api/v1/reminders", s.requireAuth(s.handleReminderQueue))
+	s.mux.HandleFunc("GET /api/v1/reminders/stats", s.requireAuth(s.handleReminderStats))
+	s.mux.HandleFunc("GET /api/v1/reminders/templates", s.requireAuth(s.handleReminderTemplates))
+	s.mux.HandleFunc("PUT /api/v1/reminders/templates/{id}", s.requireAuth(s.handleUpdateTemplate))
+	s.mux.HandleFunc("POST /api/v1/reminders/test", s.requireAuth(s.handleSendTestSMS))
+	s.mux.HandleFunc("POST /api/v1/reminders/send-all", s.requireAuth(s.handleSendAllReminders))
+
+	// Exports (authenticated).
+	s.mux.HandleFunc("GET /api/v1/export/patients/excel", s.requireAuth(s.handleExportPatientsExcel))
+	s.mux.HandleFunc("GET /api/v1/export/patients/pdf", s.requireAuth(s.handleExportPatientsPDF))
+	s.mux.HandleFunc("GET /api/v1/export/monthly/excel", s.requireAuth(s.handleExportMonthlyExcel))
+	s.mux.HandleFunc("GET /api/v1/export/monthly/pdf", s.requireAuth(s.handleExportMonthlyPDF))
+
+	// Frontend — serve embedded files, fallback to index.html for SPA.
+	frontendFS, _ := fs.Sub(web.Files, ".")
+	fileServer := http.FileServer(http.FS(frontendFS))
+	s.mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		// API routes are handled above; this catches everything else.
+		fileServer.ServeHTTP(w, r)
+	})
 }
 
 // guardSetup blocks access if the setup wizard is already complete.

@@ -30,6 +30,7 @@ type Center struct {
 	EndTime          string // HH:MM
 	SlotDuration     int    // minutes
 	MaxPatientsDay   int
+	SetupStep        int  // 0=not started, 1=center, 2=admin, 3=schedule, 4=sms, 5=complete
 	SetupComplete    bool
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
@@ -93,8 +94,10 @@ type CenterRepository interface {
 	Get(ctx context.Context) (*Center, error)
 	Create(ctx context.Context, c *Center) error
 	Update(ctx context.Context, c *Center) error
+	SetSetupStep(ctx context.Context, step int) error
 	CompleteSetup(ctx context.Context) error
 	IsSetupDone(ctx context.Context) (bool, error)
+	GetSetupStep(ctx context.Context) (int, error)
 }
 
 // SMSConfigRepository is a driven port for SMS configuration persistence.

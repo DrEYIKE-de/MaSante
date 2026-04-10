@@ -1,8 +1,10 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/masante/masante/app"
 	"github.com/masante/masante/domain"
 )
 
@@ -12,7 +14,8 @@ func (s *Server) handleSetupStatus(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "erreur interne")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]bool{"setup_complete": done})
+	step, _ := s.setup.GetSetupStep(r.Context())
+	writeJSON(w, http.StatusOK, map[string]any{"setup_complete": done, "current_step": step})
 }
 
 func (s *Server) handleSetupCenter(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +29,10 @@ func (s *Server) handleSetupCenter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.setup.SaveCenter(r.Context(), req); err != nil {
+		if errors.Is(err, app.ErrSetupWrongStep) {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "erreur lors de l'enregistrement")
 		return
 	}
@@ -42,11 +49,15 @@ func (s *Server) handleSetupAdmin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "nom, identifiant et mot de passe requis")
 		return
 	}
-	if len(req.Password) < 8 {
-		writeError(w, http.StatusBadRequest, "mot de passe trop court (8 caracteres minimum)")
+	if err := domain.ValidatePassword(req.Password); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := s.setup.CreateAdmin(r.Context(), req); err != nil {
+		if errors.Is(err, app.ErrSetupWrongStep) {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "erreur lors de la creation du compte")
 		return
 	}
@@ -60,6 +71,10 @@ func (s *Server) handleSetupSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.setup.SaveSchedule(r.Context(), req); err != nil {
+		if errors.Is(err, app.ErrSetupWrongStep) {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "erreur lors de l'enregistrement")
 		return
 	}
@@ -73,6 +88,10 @@ func (s *Server) handleSetupSMS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.setup.SaveSMSConfig(r.Context(), req); err != nil {
+		if errors.Is(err, app.ErrSetupWrongStep) {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "erreur lors de l'enregistrement")
 		return
 	}
@@ -81,6 +100,10 @@ func (s *Server) handleSetupSMS(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSetupComplete(w http.ResponseWriter, r *http.Request) {
 	if err := s.setup.Complete(r.Context()); err != nil {
+		if errors.Is(err, app.ErrSetupWrongStep) {
+			writeError(w, http.StatusConflict, err.Error())
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "erreur lors de la finalisation")
 		return
 	}
