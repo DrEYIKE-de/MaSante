@@ -204,8 +204,28 @@ async function pageSetup(c){
     g.appendChild(sel('Pays','s-country',['Cameroun',"Cote d'Ivoire",'RD Congo','Senegal','Tchad','Gabon','Congo','Burkina Faso','Mali','Niger','Guinee','Togo','Benin','Rwanda','Kenya','Madagascar'],'Cameroun'));
     g.appendChild(input('Ville','text','s-city','Ex: Douala'));
     g.appendChild(input('Quartier','text','s-district','Ex: Bonanjo'));
-    g.appendChild(input('Latitude','text','s-lat','Optionnel'));
-    g.appendChild(input('Longitude','text','s-lng','Optionnel'));
+    // GPS — auto-detect or manual.
+    const gpsGroup=el('div',{class:'form-group setup-full'});
+    gpsGroup.appendChild(el('label',{text:'Localisation GPS (optionnel)'}));
+    const gpsRow=el('div',{style:'display:flex;gap:10px;align-items:center'});
+    const latInput=el('input',{class:'form-input',type:'text',id:'s-lat',placeholder:'Latitude',style:'flex:1'});
+    const lngInput=el('input',{class:'form-input',type:'text',id:'s-lng',placeholder:'Longitude',style:'flex:1'});
+    const gpsBtn=el('button',{class:'btn btn-secondary',type:'button',style:'width:auto;flex-shrink:0;padding:10px 14px'});
+    gpsBtn.appendChild(svg('map',16));
+    gpsBtn.appendChild(document.createTextNode(' Detecter'));
+    const gpsStatus=el('span',{style:'font-size:.78rem;color:var(--gray-400);margin-left:8px'});
+    gpsBtn.onclick=()=>{
+      if(!navigator.geolocation){gpsStatus.textContent='Non supporte par ce navigateur';return}
+      gpsStatus.textContent='Detection...';gpsBtn.disabled=true;
+      navigator.geolocation.getCurrentPosition(
+        (pos)=>{latInput.value=pos.coords.latitude.toFixed(6);lngInput.value=pos.coords.longitude.toFixed(6);gpsStatus.textContent='Position detectee';gpsBtn.disabled=false},
+        (err)=>{gpsStatus.textContent=err.code===1?'Acces refuse':'Position indisponible';gpsBtn.disabled=false},
+        {timeout:10000,maximumAge:60000}
+      );
+    };
+    gpsRow.appendChild(latInput);gpsRow.appendChild(lngInput);gpsRow.appendChild(gpsBtn);
+    gpsGroup.appendChild(gpsRow);gpsGroup.appendChild(gpsStatus);
+    g.appendChild(gpsGroup);
     content.appendChild(g);
   }
   function renderStep2(){
