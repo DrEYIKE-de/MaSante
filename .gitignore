@@ -6,3 +6,4 @@ masante-data/
 .idea/
 .DS_Store
 dist/
+web/frontend/node_modules/

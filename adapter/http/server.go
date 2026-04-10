@@ -126,11 +126,21 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/export/monthly/excel", canExport(s.handleExportMonthlyExcel))
 	s.mux.HandleFunc("GET /api/v1/export/monthly/pdf", canExport(s.handleExportMonthlyPDF))
 
-	// Frontend — serve embedded files, fallback to index.html for SPA.
-	frontendFS, _ := fs.Sub(web.Files, ".")
+	// Frontend — serve embedded Vue build, fallback to index.html for SPA routing.
+	frontendFS, _ := fs.Sub(web.Files, "static")
 	fileServer := http.FileServer(http.FS(frontendFS))
 	s.mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		// API routes are handled above; this catches everything else.
+		// Try to serve the file. If not found, serve index.html for SPA routing.
+		path := r.URL.Path
+		if path != "/" {
+			if f, err := frontendFS.Open(path[1:]); err == nil {
+				f.Close()
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+		}
+		// Serve index.html for SPA routes.
+		r.URL.Path = "/"
 		fileServer.ServeHTTP(w, r)
 	})
 }
