@@ -18,6 +18,7 @@ type meResponse struct {
 	Username string `json:"username"`
 	FullName string `json:"full_name"`
 	Email    string `json:"email"`
+	Phone    string `json:"phone"`
 	Role     string `json:"role"`
 	Title    string `json:"title"`
 }
@@ -61,6 +62,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Email:    user.Email,
 		Role:     string(user.Role),
 		Title:    user.Title,
+		Phone:    user.Phone,
 	})
 }
 
@@ -92,5 +94,6 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 		Email:    user.Email,
 		Role:     string(user.Role),
 		Title:    user.Title,
+		Phone:    user.Phone,
 	})
 }

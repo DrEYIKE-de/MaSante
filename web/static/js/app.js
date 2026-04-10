@@ -671,11 +671,14 @@ function showAddUser(onDone){
 // ── PROFILE ──
 async function pageProfile(c){
   if(!user)return;
+  // Fetch fresh profile data.
+  const profRes=await prof.get();
+  const profData=profRes.ok?profRes.data:user;
   const grid=el('div',{class:'grid-2-wide',style:'align-items:start'});
   // Info.
   const c1=el('div',{class:'card'});const h1=el('div',{class:'card-head'});const t1=el('h3');t1.appendChild(svg('user',18));t1.appendChild(document.createTextNode(' Informations'));h1.appendChild(t1);c1.appendChild(h1);
   const b1=el('div',{class:'card-body'});
-  const ni=el('input',{class:'form-input',type:'text',value:user.full_name||''});const ei=el('input',{class:'form-input',type:'email',value:user.email||''});const pi=el('input',{class:'form-input',type:'tel',value:''});
+  const ni=el('input',{class:'form-input',type:'text',value:profData.full_name||''});const ei=el('input',{class:'form-input',type:'email',value:profData.email||''});const pi=el('input',{class:'form-input',type:'tel',value:profData.phone||''});
   [['Nom',ni],['Email',ei],['Telephone',pi]].forEach(([l,i])=>{const g=el('div',{class:'form-group'});g.appendChild(el('label',{text:l}));g.appendChild(i);b1.appendChild(g)});
   const saveBtn=el('button',{class:'btn btn-primary',style:'width:auto;margin-top:8px'});saveBtn.appendChild(svg('check',16));saveBtn.appendChild(document.createTextNode(' Enregistrer'));
   saveBtn.onclick=async()=>{const r=await prof.update({full_name:ni.value,email:ei.value,phone:pi.value});if(r.ok){toast('Profil mis a jour','success');user.full_name=ni.value}else toast(r.error,'error')};

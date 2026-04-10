@@ -26,6 +26,7 @@ func (s *Server) handleGetProfile(w http.ResponseWriter, r *http.Request) {
 		Email:    user.Email,
 		Role:     string(user.Role),
 		Title:    user.Title,
+		Phone:    user.Phone,
 	})
 }
 
