@@ -144,7 +144,7 @@ async function pageSetup(c){
   if(res.ok&&res.data.current_step>0)step=res.data.current_step+1;
   if(step>total)step=total;
 
-  const wrap=el('div',{style:'height:100vh;display:flex;flex-direction:column;background:var(--white);margin:-24px'});
+  const wrap=el('div',{style:'position:fixed;inset:0;display:flex;flex-direction:column;background:var(--white);z-index:100'});
   // Header.
   const header=el('div',{class:'setup-header'});
   const slogo=el('div',{class:'sh-logo'});slogo.appendChild(svg('leaf',16));header.appendChild(slogo);
@@ -276,7 +276,7 @@ async function pageSetup(c){
 
 // ── LOGIN ──
 async function pageLogin(c){
-  const wrap=el('div',{style:'display:flex;height:100vh;margin:-24px'});
+  const wrap=el('div',{style:'position:fixed;inset:0;display:flex;z-index:100'});
   const left=el('div',{style:'flex:1;background:var(--primary);display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff'});
   const brand=el('div',{style:'text-align:center'});
   const logo=el('div',{style:'width:80px;height:80px;border:2px solid rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;background:rgba(255,255,255,.06)'});
