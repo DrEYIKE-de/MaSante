@@ -866,11 +866,83 @@ async function pageSettings(c){
 // ── HELP ──
 async function pageHelp(c){
   c.appendChild(el('div',{style:'text-align:center;margin-bottom:28px'},[el('h3',{text:'Comment pouvons-nous vous aider ?',style:'font-size:1.4rem;margin-bottom:16px'})]));
+
+  // Guides.
+  const guidesTitle=el('h4',{style:'font-size:.95rem;margin-bottom:12px;display:flex;align-items:center;gap:8px'});
+  guidesTitle.appendChild(svg('book',18));guidesTitle.appendChild(document.createTextNode(' Guides de demarrage'));
+  c.appendChild(guidesTitle);
+
   const guides=el('div',{class:'grid-2',style:'align-items:start;margin-bottom:24px'});
-  [['user-plus','green','Inscrire un patient',['Cliquez sur Nouveau patient','Remplissez nom, prenom, telephone','Selectionnez la langue','Cliquez Inscrire']],
-   ['calendar','blue','Programmer un RDV',['Allez dans Prise de RDV','Recherchez le patient','Choisissez date et creneau','Confirmez']],
-   ['clipboard','amber','Gerer un RDV',['Depuis le calendrier, cliquez sur un evenement','Marquez termine, manque ou reporte','Ajoutez des notes']],
-   ['bell','red','Configurer les SMS',['Allez dans Parametres','Configurez le fournisseur SMS','Activez les rappels J-7, J-2']]
+  [
+    ['user-plus','green','Inscrire un nouveau patient',[
+      '1. Cliquez sur "Nouveau patient" dans la barre laterale',
+      '2. Remplissez le nom, prenom, sexe (obligatoires)',
+      '3. Ajoutez le telephone, quartier, adresse',
+      '4. Selectionnez la langue et le canal de rappel (SMS, WhatsApp, appel)',
+      '5. Ajoutez un contact de confiance (optionnel mais recommande)',
+      '6. Indiquez la source de reference',
+      '7. Cliquez "Inscrire le patient" — un code unique est genere automatiquement'
+    ]],
+    ['calendar','blue','Programmer un rendez-vous',[
+      '1. Allez dans "Prise de RDV"',
+      '2. Tapez le nom ou code du patient dans la recherche (min 2 caracteres)',
+      '3. Selectionnez le patient dans les resultats',
+      '4. Choisissez le type de visite (consultation, retrait medicaments, bilan, club)',
+      '5. Selectionnez une date dans le calendrier',
+      '6. Les creneaux disponibles s\'affichent — cliquez sur un horaire',
+      '7. Ajoutez des notes si necessaire',
+      '8. Cliquez "Confirmer" — le RDV apparait dans le calendrier'
+    ]],
+    ['chart','amber','Utiliser le calendrier',[
+      '1. Allez dans "Calendrier RDV"',
+      '2. Basculez entre vue Semaine et vue Mois avec les boutons',
+      '3. Naviguez avec les fleches precedent/suivant',
+      '4. Le bouton "Aujourd\'hui" ramene a la date courante',
+      '5. En vue mois : les badges indiquent le nombre de RDV par jour',
+      '6. Cliquez sur un jour pour voir le detail des rendez-vous',
+      '7. Les couleurs indiquent le statut : vert=confirme, orange=attente, rouge=manque, bleu=termine'
+    ]],
+    ['users','green','Consulter la liste des patients',[
+      '1. Allez dans "Liste patients"',
+      '2. Utilisez les filtres : Tous, Actifs, A surveiller, Perdus de vue, Sortis',
+      '3. La barre de recherche en haut permet de chercher par nom ou code',
+      '4. Cliquez sur un patient pour voir sa fiche complete',
+      '5. Le score de risque indique la probabilite de manquer un RDV (Faible/Moyen/Eleve)'
+    ]],
+    ['clipboard','blue','Gerer la fiche d\'un patient',[
+      '1. Cliquez sur un patient dans la liste',
+      '2. La fiche affiche : identite, zone, langue, telephone, canal de rappel',
+      '3. Le score de risque est calcule automatiquement',
+      '4. "Programmer un RDV" ouvre directement la prise de RDV',
+      '5. "Sortie du programme" permet de declarer : deces, transfert, abandon, perdu de vue, guerison',
+      '6. L\'historique des visites montre la timeline complete'
+    ]],
+    ['bell','red','Configurer les rappels SMS',[
+      '1. Les rappels sont configures lors du setup initial (etape 4)',
+      '2. Pour modifier : allez dans "Rappels"',
+      '3. La file d\'attente montre les rappels planifies, envoyes et echoues',
+      '4. Les modeles de messages sont editables (ne jamais mentionner la pathologie !)',
+      '5. Les placeholders disponibles : {prenom}, {date}, {heure}, {centre}',
+      '6. Fournisseurs supportes : Africa\'s Talking, MTN, Orange, Twilio, Infobip'
+    ]],
+    ['shield','amber','Gerer les utilisateurs',[
+      '1. Allez dans "Utilisateurs" (menu Systeme)',
+      '2. Cliquez "Ajouter" pour creer un nouveau compte',
+      '3. Remplissez : nom, email, identifiant, mot de passe (min 8 chars + 1 chiffre)',
+      '4. Attribuez un role :',
+      '   - Admin : acces complet, gestion utilisateurs et parametres',
+      '   - Medecin : patients, RDV, exports, rapports',
+      '   - Infirmier : patients, RDV, rappels',
+      '   - ASC : module terrain uniquement',
+      '5. L\'utilisateur devra changer son mot de passe a la premiere connexion'
+    ]],
+    ['user','green','Modifier votre profil',[
+      '1. Cliquez sur votre nom en bas de la barre laterale',
+      '2. Modifiez votre nom, email ou telephone',
+      '3. Cliquez "Enregistrer"',
+      '4. Pour changer votre mot de passe : remplissez les 3 champs dans "Securite"',
+      '5. Apres un changement de mot de passe, vous serez redirige vers le login'
+    ]]
   ].forEach(([ic,col,title,steps])=>{
     const card=el('div',{class:'card',style:'cursor:pointer'});const body=el('div',{class:'card-body',style:'padding:18px 20px'});
     const hdr=el('div',{style:'display:flex;align-items:center;gap:12px'});const iw=el('div',{class:'stat-icon '+col,style:'width:36px;height:36px;margin-bottom:0'});iw.appendChild(svg(ic,18));hdr.appendChild(iw);hdr.appendChild(el('div',{text:title,style:'font-weight:600;font-size:.9rem'}));
@@ -880,7 +952,50 @@ async function pageHelp(c){
     card.onclick=()=>{const open=cnt.style.display==='block';cnt.style.display=open?'none':'block';ch.style.transform=open?'':'rotate(180deg)'};
     card.appendChild(body);guides.appendChild(card)});
   c.appendChild(guides);
-  c.appendChild(el('div',{style:'text-align:center;margin-top:24px;padding:16px;color:var(--gray-300);font-size:.78rem',text:'MaSante v1.0.0 — masante.africa'}));
+
+  // FAQ.
+  const faqTitle=el('h4',{style:'font-size:.95rem;margin-bottom:12px;display:flex;align-items:center;gap:8px'});
+  faqTitle.appendChild(svg('help',18));faqTitle.appendChild(document.createTextNode(' Questions frequentes'));
+  c.appendChild(faqTitle);
+
+  const faqGrid=el('div',{class:'grid-2-wide',style:'align-items:start;margin-bottom:24px'});
+
+  // FAQ columns.
+  const faqSections=[
+    ['Patients et RDV',[
+      ['Comment declarer un deces ou une sortie ?','Ouvrez la fiche du patient, cliquez sur "Sortie du programme". Choisissez le motif (deces, transfert, abandon, perdu de vue, guerison), la date et ajoutez des notes. Le dossier sera archive.'],
+      ['Que signifie le score de risque ?','Le score (0-10) estime la probabilite de manquer un RDV. Il est base sur : nombre de RDV manques, distance, duree sous traitement, age. Plus il est eleve, plus le suivi doit etre rapproche.'],
+      ['Comment exporter les donnees ?','Allez dans Parametres > Rapports. Telechargez en Excel ou PDF : rapport mensuel, liste patients actifs, patients perdus de vue.'],
+    ]],
+    ['Technique et securite',[
+      ['MaSante fonctionne-t-il sans internet ?','Oui. Toutes les fonctions (RDV, fiches, rapports) fonctionnent hors ligne. Seuls les rappels SMS necessitent une connexion.'],
+      ['Les messages SMS mentionnent-ils la maladie ?','Jamais. Tous les messages sont generiques : "rappel de votre rendez-vous sante". Les modeles sont editables dans Rappels > Modeles.'],
+      ['Comment ajouter un nouvel utilisateur ?','Menu Systeme > Utilisateurs > Ajouter. Remplissez les infos, attribuez un role. L\'utilisateur changera son mot de passe a la premiere connexion.'],
+      ['Mon compte est verrouille, que faire ?','Apres 5 tentatives echouees, le compte est verrouille 15 minutes. Attendez ou contactez l\'administrateur pour reinitialiser.'],
+      ['Comment sauvegarder les donnees ?','Les donnees sont dans le dossier masante-data/. Copiez ce dossier regulierement sur une cle USB. Allez dans Parametres pour exporter les rapports.'],
+    ]]
+  ];
+
+  faqSections.forEach(([sectionTitle,faqs])=>{
+    const card=el('div',{class:'card'});
+    const head=el('div',{class:'card-head'});head.appendChild(el('h3',{text:sectionTitle}));card.appendChild(head);
+    const body=el('div',{class:'card-body'});
+    faqs.forEach(([q,a])=>{
+      const item=el('div',{style:'padding:12px 0;border-bottom:1px solid var(--gray-50);cursor:pointer'});
+      const question=el('div',{style:'display:flex;align-items:center;justify-content:space-between;font-size:.88rem;font-weight:600;color:var(--gray-700)'});
+      question.appendChild(el('span',{text:q}));
+      const ch=svg('down',14);ch.style.cssText='flex-shrink:0;color:var(--gray-300);transition:.2s';question.appendChild(ch);
+      item.appendChild(question);
+      const answer=el('div',{style:'display:none;padding-top:8px;font-size:.82rem;color:var(--gray-500);line-height:1.6',text:a});
+      item.appendChild(answer);
+      item.onclick=()=>{const open=answer.style.display==='block';answer.style.display=open?'none':'block';ch.style.transform=open?'':'rotate(180deg)'};
+      body.appendChild(item);
+    });
+    card.appendChild(body);faqGrid.appendChild(card);
+  });
+  c.appendChild(faqGrid);
+
+  c.appendChild(el('div',{style:'text-align:center;margin-top:24px;padding:16px;color:var(--gray-300);font-size:.78rem',text:'MaSante v1.0.0 — Logiciel libre et gratuit — masante.africa'}));
 }
 
 // ── Start ──

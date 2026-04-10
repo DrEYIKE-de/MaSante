@@ -104,9 +104,9 @@ func (r *UserRepo) GetByUsername(ctx context.Context, username string) (*domain.
 
 func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE users SET full_name=?, email=?, phone=?, role=?, title=?, status=?, must_change_pwd=?, password_hash=?, updated_at=datetime('now')
+		`UPDATE users SET username=?, full_name=?, email=?, phone=?, role=?, title=?, status=?, must_change_pwd=?, password_hash=?, updated_at=datetime('now')
 		 WHERE id=?`,
-		u.FullName, u.Email, u.Phone, u.Role, u.Title, u.Status, u.MustChangePwd, u.PasswordHash, u.ID,
+		u.Username, u.FullName, u.Email, u.Phone, u.Role, u.Title, u.Status, u.MustChangePwd, u.PasswordHash, u.ID,
 	)
 	return err
 }

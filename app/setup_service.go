@@ -93,9 +93,19 @@ func (s *SetupService) CreateAdmin(ctx context.Context, req domain.SetupAdminReq
 		return fmt.Errorf("hash password: %w", err)
 	}
 
-	// Check if admin already exists (re-submission of step 2).
-	existing, _ := s.users.GetByUsername(ctx, req.Username)
+	// Find any existing admin user (re-submission of step 2).
+	// Search by role, not username, in case the username was changed.
+	allUsers, _ := s.users.List(ctx)
+	var existing *domain.User
+	for i := range allUsers {
+		if allUsers[i].Role == domain.RoleAdmin {
+			existing = &allUsers[i]
+			break
+		}
+	}
+
 	if existing != nil {
+		existing.Username = req.Username
 		existing.PasswordHash = hash
 		existing.FullName = req.FullName
 		existing.Email = req.Email
