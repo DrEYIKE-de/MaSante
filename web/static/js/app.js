@@ -179,10 +179,10 @@ async function pageSetup(c){
     renderStep();stepLbl.textContent='Etape '+step+' sur '+total;progFill.style.width=(step/total*100)+'%';prevBtn.style.visibility='visible';updateNext()
   };
 
+  const refs={};
+
   footer.appendChild(prevBtn);footer.appendChild(nextBtn);wrap.appendChild(footer);
   c.appendChild(wrap);renderStep();
-
-  const refs={};
 
   function renderStep(){
     content.textContent='';
