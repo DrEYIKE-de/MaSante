@@ -1,11 +1,22 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { patients, appointments } from '../api'
 import { useToast } from '../composables/useToast'
 
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
+
+onMounted(async () => {
+  const patientId = route.query.patient
+  if (patientId) {
+    const res = await patients.get(patientId)
+    if (res.ok && res.data) {
+      selectedPatient.value = res.data
+    }
+  }
+})
 
 const searchQuery = ref('')
 const searchResults = ref([])

@@ -87,7 +87,7 @@ async function confirmExit() {
         <div class="card" style="margin-bottom:16px">
           <div class="card-head"><h3>Actions</h3></div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
-            <button class="btn btn-primary" @click="router.push('/new-apt')">Programmer un RDV</button>
+            <button class="btn btn-primary" @click="router.push('/new-apt?patient=' + patient.ID)">Programmer un RDV</button>
             <button class="btn btn-secondary" @click="router.push('/patients')">Retour a la liste</button>
             <button v-if="patient.Status !== 'sorti'" class="btn" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger)" @click="showExitModal = true">Sortir du programme</button>
           </div>
