@@ -70,6 +70,10 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	if err := domain.ValidateRole(domain.Role(req.Role)); err != nil {
+		writeError(w, http.StatusBadRequest, "role invalide (admin, medecin, infirmier, asc)")
+		return
+	}
 
 	u := &domain.User{
 		Username: req.Username,
@@ -119,12 +123,20 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		u.Phone = req.Phone
 	}
 	if req.Role != "" {
+		if err := domain.ValidateRole(domain.Role(req.Role)); err != nil {
+			writeError(w, http.StatusBadRequest, "role invalide")
+			return
+		}
 		u.Role = domain.Role(req.Role)
 	}
 	if req.Title != "" {
 		u.Title = req.Title
 	}
 	if req.Status != "" {
+		if err := domain.ValidateUserStatus(domain.UserStatus(req.Status)); err != nil {
+			writeError(w, http.StatusBadRequest, "statut invalide")
+			return
+		}
 		u.Status = domain.UserStatus(req.Status)
 	}
 
@@ -151,7 +163,7 @@ func (s *Server) handleDisableUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.userSvc.Disable(r.Context(), id, admin.ID); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "ressource introuvable")
 		return
 	}
 
@@ -177,7 +189,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	admin := UserFromContext(r.Context())
 	if err := s.userSvc.ResetPassword(r.Context(), id, req.Password, admin.ID); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "ressource introuvable")
 		return
 	}
 

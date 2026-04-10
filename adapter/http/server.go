@@ -163,6 +163,12 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
+// internalError logs the real error and sends a generic message to the client.
+func internalError(w http.ResponseWriter, err error) {
+	log.Printf("[erreur] %v", err)
+	writeError(w, http.StatusInternalServerError, "erreur interne du serveur")
+}
+
 func readJSON(r *http.Request, v any) error {
 	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // 1 MB max
 	defer r.Body.Close()

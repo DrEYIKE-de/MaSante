@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,6 +47,14 @@ func (s *Server) handleCreateAppointment(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusBadRequest, "patient_id, date, time et type requis")
 		return
 	}
+	if err := domain.ValidateAppointmentType(domain.AppointmentType(req.Type)); err != nil {
+		writeError(w, http.StatusBadRequest, "type de rendez-vous invalide")
+		return
+	}
+	if err := domain.ValidateTimeFormat(req.Time); err != nil {
+		writeError(w, http.StatusBadRequest, "format d'heure invalide (HH:MM)")
+		return
+	}
 
 	date, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
@@ -63,11 +72,15 @@ func (s *Server) handleCreateAppointment(w http.ResponseWriter, r *http.Request)
 
 	user := UserFromContext(r.Context())
 	if err := s.appointmentSvc.Schedule(r.Context(), a, user.ID); err != nil {
-		status := http.StatusInternalServerError
-		if err == domain.ErrSlotUnavailable {
-			status = http.StatusConflict
+		if errors.Is(err, domain.ErrSlotUnavailable) {
+			writeError(w, http.StatusConflict, "creneau indisponible")
+			return
 		}
-		writeError(w, status, err.Error())
+		if errors.Is(err, domain.ErrPatientNotFound) {
+			writeError(w, http.StatusNotFound, "patient introuvable")
+			return
+		}
+		internalError(w, err)
 		return
 	}
 
@@ -117,7 +130,7 @@ func (s *Server) handleCompleteAppointment(w http.ResponseWriter, r *http.Reques
 	user := UserFromContext(r.Context())
 	next, err := s.appointmentSvc.Complete(r.Context(), id, domReq, user.ID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "rendez-vous introuvable")
 		return
 	}
 
@@ -149,7 +162,7 @@ func (s *Server) handleMissedAppointment(w http.ResponseWriter, r *http.Request)
 		Notes:          req.Notes,
 	}, user.ID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "rendez-vous introuvable")
 		return
 	}
 
@@ -183,7 +196,7 @@ func (s *Server) handleRescheduleAppointment(w http.ResponseWriter, r *http.Requ
 		NewDate: newDate,
 		Reason:  req.Reason,
 	}, user.ID); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "rendez-vous introuvable")
 		return
 	}
 
@@ -199,7 +212,7 @@ func (s *Server) handleCancelAppointment(w http.ResponseWriter, r *http.Request)
 
 	user := UserFromContext(r.Context())
 	if err := s.appointmentSvc.Cancel(r.Context(), id, user.ID); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "rendez-vous introuvable")
 		return
 	}
 
@@ -221,7 +234,7 @@ func (s *Server) handleAvailableSlots(w http.ResponseWriter, r *http.Request) {
 
 	slots, err := s.appointmentSvc.AvailableSlots(r.Context(), date)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -243,7 +256,7 @@ func (s *Server) handleCalendarWeek(w http.ResponseWriter, r *http.Request) {
 
 	apts, err := s.appointmentSvc.ListByWeek(r.Context(), date)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -253,7 +266,7 @@ func (s *Server) handleCalendarWeek(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDashboardToday(w http.ResponseWriter, r *http.Request) {
 	apts, err := s.appointmentSvc.ListByDate(r.Context(), time.Now())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, apts)
@@ -262,7 +275,7 @@ func (s *Server) handleDashboardToday(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDashboardOverdue(w http.ResponseWriter, r *http.Request) {
 	apts, err := s.appointmentSvc.ListOverdue(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, apts)
@@ -271,13 +284,13 @@ func (s *Server) handleDashboardOverdue(w http.ResponseWriter, r *http.Request) 
 func (s *Server) handleDashboardStats(w http.ResponseWriter, r *http.Request) {
 	patientCounts, err := s.patientSvc.CountByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
 	aptCounts, err := s.appointmentSvc.CountTodayByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 

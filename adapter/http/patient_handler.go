@@ -41,6 +41,16 @@ func (s *Server) handleCreatePatient(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "nom, prenom et sexe requis")
 		return
 	}
+	if err := domain.ValidateSex(req.Sex); err != nil {
+		writeError(w, http.StatusBadRequest, "sexe invalide (M ou F)")
+		return
+	}
+	if req.ReminderChannel != "" {
+		if err := domain.ValidateReminderChannel(domain.ReminderChannel(req.ReminderChannel)); err != nil {
+			writeError(w, http.StatusBadRequest, "canal de rappel invalide")
+			return
+		}
+	}
 
 	p := &domain.Patient{
 		LastName:        req.LastName,
@@ -148,6 +158,10 @@ func (s *Server) handleExitPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := domain.ValidateExitReason(domain.ExitReason(req.Reason)); err != nil {
+		writeError(w, http.StatusBadRequest, "motif de sortie invalide")
+		return
+	}
 	date, _ := time.Parse("2006-01-02", req.Date)
 	if date.IsZero() {
 		date = time.Now()
@@ -159,7 +173,7 @@ func (s *Server) handleExitPatient(w http.ResponseWriter, r *http.Request) {
 		Date:   date,
 		Notes:  req.Notes,
 	}, user.ID); err != nil {
-		writeError(w, http.StatusNotFound, err.Error())
+		writeError(w, http.StatusNotFound, "ressource introuvable")
 		return
 	}
 

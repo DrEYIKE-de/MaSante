@@ -46,7 +46,40 @@ func (m *mockUserRepo) Delete(_ context.Context, id int64) error {
 	return domain.ErrUserNotFound
 }
 func (m *mockUserRepo) List(_ context.Context) ([]domain.User, error)    { return nil, nil }
-func (m *mockUserRepo) UpdateLastLogin(_ context.Context, _ int64) error { return nil }
+func (m *mockUserRepo) UpdateLastLogin(_ context.Context, id int64) error {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.FailedAttempts = 0
+			u.LockedUntil = nil
+		}
+	}
+	return nil
+}
+func (m *mockUserRepo) IncrementFailedAttempts(_ context.Context, id int64) error {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.FailedAttempts++
+		}
+	}
+	return nil
+}
+func (m *mockUserRepo) LockAccount(_ context.Context, id int64, until time.Time) error {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.LockedUntil = &until
+		}
+	}
+	return nil
+}
+func (m *mockUserRepo) ResetFailedAttempts(_ context.Context, id int64) error {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.FailedAttempts = 0
+			u.LockedUntil = nil
+		}
+	}
+	return nil
+}
 
 type mockSessionRepo struct {
 	sessions map[string]*domain.Session
@@ -222,5 +255,21 @@ func TestAuthService_Logout(t *testing.T) {
 	}
 	if len(sessions.sessions) != 0 {
 		t.Error("session not deleted after logout")
+	}
+}
+
+func TestAuthService_Login_AccountLocked(t *testing.T) {
+	svc, _ := newTestAuthService()
+	ctx := context.Background()
+
+	// Fail 5 times to trigger lockout.
+	for i := 0; i < 5; i++ {
+		svc.Login(ctx, "admin", "wrong", "127.0.0.1", "test")
+	}
+
+	// 6th attempt should return ErrAccountLocked.
+	_, _, err := svc.Login(ctx, "admin", "secret", "127.0.0.1", "test")
+	if !errors.Is(err, domain.ErrAccountLocked) {
+		t.Errorf("got %v, want ErrAccountLocked", err)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/masante/masante/domain"
@@ -110,10 +111,10 @@ func (r *PatientRepo) Search(ctx context.Context, query string, limit int) ([]do
 	if limit <= 0 {
 		limit = 10
 	}
-	like := "%" + query + "%"
+	like := "%" + escapeLike(query) + "%"
 	rows, err := r.db.QueryContext(ctx,
 		`SELECT `+patientCols+` FROM patients
-		 WHERE last_name LIKE ? OR first_name LIKE ? OR code LIKE ? OR phone LIKE ?
+		 WHERE last_name LIKE ? ESCAPE '\' OR first_name LIKE ? ESCAPE '\' OR code LIKE ? ESCAPE '\' OR phone LIKE ? ESCAPE '\'
 		 ORDER BY last_name, first_name LIMIT ?`,
 		like, like, like, like, limit,
 	)
@@ -257,11 +258,16 @@ func buildPatientWhere(f domain.PatientFilter) (string, []any) {
 		args = append(args, f.District)
 	}
 	if f.Query != "" {
-		like := "%" + f.Query + "%"
+		like := "%" + escapeLike(f.Query) + "%"
 		where += " AND (last_name LIKE ? OR first_name LIKE ? OR code LIKE ?)"
 		args = append(args, like, like, like)
 	}
 	return where, args
+}
+
+func escapeLike(s string) string {
+	r := strings.NewReplacer("%", "\\%", "_", "\\_")
+	return r.Replace(s)
 }
 
 func formatDatePtr(t *time.Time) any {

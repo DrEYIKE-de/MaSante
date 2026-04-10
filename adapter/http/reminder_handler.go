@@ -18,7 +18,7 @@ type updateTemplateRequest struct {
 func (s *Server) handleReminderQueue(w http.ResponseWriter, r *http.Request) {
 	pending, err := s.reminderSvc.ListPending(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, pending)
@@ -27,7 +27,7 @@ func (s *Server) handleReminderQueue(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleReminderStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := s.reminderSvc.Stats(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, stats)
@@ -36,7 +36,7 @@ func (s *Server) handleReminderStats(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleReminderTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := s.reminderSvc.ListTemplates(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, templates)
@@ -51,7 +51,7 @@ func (s *Server) handleUpdateTemplate(w http.ResponseWriter, r *http.Request) {
 
 	templates, err := s.reminderSvc.ListTemplates(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (s *Server) handleUpdateTemplate(w http.ResponseWriter, r *http.Request) {
 			t.Body = req.Body
 			t.IsActive = req.IsActive
 			if err := s.reminderSvc.UpdateTemplate(r.Context(), &t); err != nil {
-				writeError(w, http.StatusInternalServerError, err.Error())
+				internalError(w, err)
 				return
 			}
 			writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -89,7 +89,7 @@ func (s *Server) handleSendTestSMS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.reminderSvc.SendTest(r.Context(), req.To, msg); err != nil {
-		writeError(w, http.StatusServiceUnavailable, err.Error())
+		writeError(w, http.StatusServiceUnavailable, "fournisseur SMS indisponible")
 		return
 	}
 
@@ -98,7 +98,7 @@ func (s *Server) handleSendTestSMS(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSendAllReminders(w http.ResponseWriter, r *http.Request) {
 	if err := s.reminderSvc.ProcessQueue(r.Context()); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})

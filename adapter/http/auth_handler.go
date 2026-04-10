@@ -1,8 +1,11 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"time"
+
+	"github.com/masante/masante/domain"
 )
 
 type loginRequest struct {
@@ -33,6 +36,10 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	session, user, err := s.auth.Login(r.Context(), req.Username, req.Password, r.RemoteAddr, r.UserAgent())
 	if err != nil {
+		if errors.Is(err, domain.ErrAccountLocked) {
+			writeError(w, http.StatusTooManyRequests, "compte verrouille temporairement — reessayez dans 15 minutes")
+			return
+		}
 		writeError(w, http.StatusUnauthorized, "identifiant ou mot de passe incorrect")
 		return
 	}

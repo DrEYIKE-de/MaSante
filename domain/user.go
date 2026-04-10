@@ -36,8 +36,10 @@ type User struct {
 	Role          Role
 	Title         string
 	Status        UserStatus
-	MustChangePwd bool
-	LastLoginAt   *time.Time
+	MustChangePwd     bool
+	FailedAttempts    int
+	LockedUntil       *time.Time
+	LastLoginAt       *time.Time
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -82,6 +84,9 @@ type UserRepository interface {
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context) ([]User, error)
 	UpdateLastLogin(ctx context.Context, id int64) error
+	IncrementFailedAttempts(ctx context.Context, id int64) error
+	LockAccount(ctx context.Context, id int64, until time.Time) error
+	ResetFailedAttempts(ctx context.Context, id int64) error
 }
 
 // SessionRepository is a driven port for session persistence.
@@ -105,4 +110,5 @@ var (
 	ErrInvalidPassword = errors.New("mot de passe incorrect")
 	ErrSessionExpired  = errors.New("session expiree")
 	ErrUnauthorized    = errors.New("acces non autorise")
+	ErrAccountLocked   = errors.New("compte verrouille temporairement")
 )

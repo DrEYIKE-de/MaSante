@@ -184,6 +184,10 @@ var migrations = []string{
 		('rappel_j2', 'Bonjour {prenom}, ceci est un rappel de votre rendez-vous sante prevu le {date} a {heure} au centre de sante. Merci de confirmer en repondant OUI.', 'fr'),
 		('rappel_j0', 'Bonjour {prenom}, votre rendez-vous sante est aujourd''hui a {heure}. Nous vous attendons.', 'fr'),
 		('retard', 'Bonjour {prenom}, vous avez un rendez-vous sante en attente. Merci de contacter le centre pour reprogrammer.', 'fr');`,
+
+	// v2: account lockout fields
+	`ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0;
+	 ALTER TABLE users ADD COLUMN locked_until TEXT;`,
 }
 
 func Migrate(db *DB) error {

@@ -56,17 +56,18 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
 
 func (r *UserRepo) GetByID(ctx context.Context, id int64) (*domain.User, error) {
 	u := &domain.User{}
-	var lastLogin, created, updated *string
+	var lastLogin, created, updated, lockedUntil *string
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id, username, password_hash, full_name, email, phone, role, title, status, must_change_pwd, last_login_at, created_at, updated_at
+		`SELECT id, username, password_hash, full_name, email, phone, role, title, status, must_change_pwd, failed_attempts, locked_until, last_login_at, created_at, updated_at
 		 FROM users WHERE id = ?`, id,
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Email, &u.Phone, &u.Role, &u.Title, &u.Status, &u.MustChangePwd, &lastLogin, &created, &updated)
+	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Email, &u.Phone, &u.Role, &u.Title, &u.Status, &u.MustChangePwd, &u.FailedAttempts, &lockedUntil, &lastLogin, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrUserNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	u.LockedUntil = parseTime(lockedUntil)
 	u.LastLoginAt = parseTime(lastLogin)
 	if created != nil {
 		u.CreatedAt = parseTimeVal(*created)
@@ -79,17 +80,18 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (*domain.User, error) 
 
 func (r *UserRepo) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
 	u := &domain.User{}
-	var lastLogin, created, updated *string
+	var lastLogin, created, updated, lockedUntil *string
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id, username, password_hash, full_name, email, phone, role, title, status, must_change_pwd, last_login_at, created_at, updated_at
+		`SELECT id, username, password_hash, full_name, email, phone, role, title, status, must_change_pwd, failed_attempts, locked_until, last_login_at, created_at, updated_at
 		 FROM users WHERE username = ? COLLATE NOCASE`, username,
-	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Email, &u.Phone, &u.Role, &u.Title, &u.Status, &u.MustChangePwd, &lastLogin, &created, &updated)
+	).Scan(&u.ID, &u.Username, &u.PasswordHash, &u.FullName, &u.Email, &u.Phone, &u.Role, &u.Title, &u.Status, &u.MustChangePwd, &u.FailedAttempts, &lockedUntil, &lastLogin, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrUserNotFound
 	}
 	if err != nil {
 		return nil, err
 	}
+	u.LockedUntil = parseTime(lockedUntil)
 	u.LastLoginAt = parseTime(lastLogin)
 	if created != nil {
 		u.CreatedAt = parseTimeVal(*created)
@@ -141,6 +143,25 @@ func (r *UserRepo) List(ctx context.Context) ([]domain.User, error) {
 
 func (r *UserRepo) UpdateLastLogin(ctx context.Context, id int64) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE users SET last_login_at=? WHERE id=?`, time.Now().UTC().Format(time.RFC3339), id)
+		`UPDATE users SET last_login_at=?, failed_attempts=0, locked_until=NULL WHERE id=?`,
+		time.Now().UTC().Format(time.RFC3339), id)
+	return err
+}
+
+func (r *UserRepo) IncrementFailedAttempts(ctx context.Context, id int64) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE users SET failed_attempts = failed_attempts + 1 WHERE id=?`, id)
+	return err
+}
+
+func (r *UserRepo) LockAccount(ctx context.Context, id int64, until time.Time) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE users SET locked_until=? WHERE id=?`, until.UTC().Format("2006-01-02 15:04:05"), id)
+	return err
+}
+
+func (r *UserRepo) ResetFailedAttempts(ctx context.Context, id int64) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE users SET failed_attempts=0, locked_until=NULL WHERE id=?`, id)
 	return err
 }

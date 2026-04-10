@@ -19,7 +19,7 @@ func (s *Server) handleExportPatientsExcel(w http.ResponseWriter, r *http.Reques
 
 	patients, _, err := s.patientSvc.List(r.Context(), f)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (s *Server) handleExportPatientsExcel(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=patients_%s.xlsx", time.Now().Format("2006-01-02")))
 	if err := export.PatientsToExcel(w, patients, title); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 	}
 }
 
@@ -45,7 +45,7 @@ func (s *Server) handleExportPatientsPDF(w http.ResponseWriter, r *http.Request)
 
 	patients, _, err := s.patientSvc.List(r.Context(), f)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (s *Server) handleExportPatientsPDF(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=patients_%s.pdf", time.Now().Format("2006-01-02")))
 	if err := export.PatientsToPDF(w, patients, title); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 	}
 }
 
@@ -69,20 +69,20 @@ func (s *Server) handleExportMonthlyExcel(w http.ResponseWriter, r *http.Request
 
 	patientCounts, err := s.patientSvc.CountByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
 	aptCounts, err := s.appointmentSvc.CountTodayByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=rapport_%s.xlsx", month))
 	if err := export.MonthlyReportExcel(w, month, patientCounts, aptCounts); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 	}
 }
 
@@ -94,13 +94,13 @@ func (s *Server) handleExportMonthlyPDF(w http.ResponseWriter, r *http.Request) 
 
 	patientCounts, err := s.patientSvc.CountByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
 	aptCounts, err := s.appointmentSvc.CountTodayByStatus(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 		return
 	}
 
@@ -110,6 +110,6 @@ func (s *Server) handleExportMonthlyPDF(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=rapport_%s.pdf", month))
 	if err := export.MonthlyReportPDF(w, month, centerName, patientCounts, aptCounts); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		internalError(w, err)
 	}
 }
