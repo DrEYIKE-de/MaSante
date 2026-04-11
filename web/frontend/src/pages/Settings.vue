@@ -37,7 +37,6 @@ const providers = [
   { value: 'mtn', label: 'MTN SMS API', keyHint: 'Ex: Bearer token fourni par MTN', secretHint: 'Ex: consumer secret MTN' },
   { value: 'orange', label: 'Orange SMS API', keyHint: 'Ex: token OAuth Orange', secretHint: 'Non requis pour Orange' },
   { value: 'twilio', label: 'Twilio', keyHint: 'Ex: ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', secretHint: 'Ex: votre Auth Token Twilio' },
-  { value: 'infobip', label: 'Infobip', keyHint: 'Ex: votre cle API Infobip', secretHint: 'Non requis pour Infobip' },
 ]
 
 const selectedProvider = computed(() => providers.find(p => p.value === smsForm.value.provider))

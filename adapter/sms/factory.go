@@ -17,8 +17,6 @@ func NewProvider(cfg domain.SMSConfig) (domain.SMSProvider, error) {
 		return NewOrange(cfg.APIKey, cfg.SenderID), nil
 	case "twilio":
 		return NewTwilio(cfg.APIKey, cfg.APISecret, cfg.SenderID), nil
-	case "infobip":
-		return NewInfobip(cfg.APIKey, "", cfg.SenderID), nil
 	default:
 		return nil, fmt.Errorf("fournisseur SMS inconnu: %q", cfg.Provider)
 	}

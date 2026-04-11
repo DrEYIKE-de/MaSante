@@ -147,7 +147,7 @@ var migrations = []string{
 	CREATE TABLE IF NOT EXISTS sms_config (
 		id              INTEGER PRIMARY KEY CHECK (id = 1),
 		enabled         INTEGER NOT NULL DEFAULT 0,
-		provider        TEXT NOT NULL DEFAULT '' CHECK (provider IN ('','africastalking','twilio','orange','mtn','infobip')),
+		provider        TEXT NOT NULL DEFAULT '' CHECK (provider IN ('','africastalking','twilio','orange','mtn')),
 		api_key         TEXT NOT NULL DEFAULT '',
 		api_secret      TEXT NOT NULL DEFAULT '',
 		sender_id       TEXT NOT NULL DEFAULT '',

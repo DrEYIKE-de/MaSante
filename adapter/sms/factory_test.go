@@ -16,7 +16,7 @@ func TestNewProvider(t *testing.T) {
 		{"mtn", "mtn", false},
 		{"orange", "orange", false},
 		{"twilio", "twilio", false},
-		{"infobip", "infobip", false},
+		{"infobip", "", true},
 		{"unknown", "", true},
 		{"", "", true},
 	}

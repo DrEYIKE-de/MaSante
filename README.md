@@ -30,7 +30,6 @@ Designed for low-resource settings: works offline, runs on any machine, never me
 - **Appointment scheduling** — slot-based booking with patient search, type selection, notes, and confirmation
 - **Calendar** — week view (hourly grid) and month view (day grid with RDV count), click any appointment to update status
 - **Appointment lifecycle** — complete, missed, reschedule (+7 days), cancel — all from the calendar modal
-- **SMS reminders** — automated J-7, J-2, day-of reminders via 5 providers (Africa's Talking, MTN, Orange, Twilio, Infobip)
 - **User management** — role-based access control (Admin, Medecin, Infirmier, ASC) with account lockout after 5 failed attempts
 - **Profile** — edit name, email, phone; change password with validation and session revocation
 - **Exports** — 6 reports (monthly, all patients, active, monitored, lost, exited) in both Excel and PDF
@@ -144,7 +143,6 @@ masante/
 | HTTP | `net/http` (stdlib) | No framework dependency, Go 1.22+ routing |
 | Password hashing | bcrypt (cost 12) | Industry standard |
 | Auth | Server-side sessions in SQLite | Instant revocation, no JWT complexity |
-| SMS | Africa's Talking, MTN, Orange, Twilio, Infobip | Covers all major African providers |
 | Excel | excelize | .xlsx generation |
 | PDF | go-pdf/fpdf | PDF report generation |
 | Tests | Go testing + Vitest | Backend + frontend coverage |
@@ -183,7 +181,6 @@ MaSante does not provide SMS service. You bring your own provider account. Suppo
 | [MTN SMS API](https://developer.mtn.com) | Cameroon, Nigeria, Ghana, DRC, Uganda... | Best if patients are on MTN |
 | [Orange SMS API](https://developer.orange.com) | Cameroon, Senegal, Ivory Coast, Mali... | Direct carrier integration |
 | [Twilio](https://twilio.com) | Worldwide | Most reliable, slightly more expensive |
-| [Infobip](https://infobip.com) | Worldwide + WhatsApp | Good if you need WhatsApp support |
 
 Configure during the setup wizard or later in Settings.
 

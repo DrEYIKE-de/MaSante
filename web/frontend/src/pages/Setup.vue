@@ -113,7 +113,7 @@ function prev() { if (step.value > 1) step.value-- }
 
 const countries = ['Cameroun', "Cote d'Ivoire", 'RD Congo', 'Senegal', 'Tchad', 'Gabon', 'Congo', 'Centrafrique', 'Burkina Faso', 'Mali', 'Niger', 'Guinee', 'Togo', 'Benin', 'Rwanda', 'Burundi', 'Kenya', 'Madagascar']
 const titles = ['Medecin referent', 'Chef de service', 'Directeur', 'Coordinateur programme', "Infirmier(e) chef"]
-const providers = ["Africa's Talking", 'MTN', 'Orange', 'Twilio', 'Infobip']
+const providers = ["Africa's Talking", 'MTN', 'Orange', 'Twilio']
 const dayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 </script>
 
