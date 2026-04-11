@@ -97,6 +97,11 @@ func (s *Server) handleSendTestSMS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSendAllReminders(w http.ResponseWriter, r *http.Request) {
+	// Generate any pending reminders first, then send.
+	if err := s.reminderSvc.GenerateReminders(r.Context()); err != nil {
+		internalError(w, err)
+		return
+	}
 	if err := s.reminderSvc.ProcessQueue(r.Context()); err != nil {
 		internalError(w, err)
 		return

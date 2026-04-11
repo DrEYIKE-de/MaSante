@@ -1,8 +1,10 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/masante/masante/adapter/sms"
 	"github.com/masante/masante/domain"
 )
 
@@ -36,5 +38,21 @@ func (s *Server) handleSaveSMSConfig(w http.ResponseWriter, r *http.Request) {
 		internalError(w, err)
 		return
 	}
+
+	// Reload SMS provider into the reminder service.
+	cfg, err := s.setup.GetSMSConfig(r.Context())
+	if err == nil && cfg.Enabled && cfg.Provider != "" {
+		provider, err := sms.NewProvider(*cfg)
+		if err != nil {
+			log.Printf("[masante] SMS provider reload failed: %v", err)
+		} else {
+			s.reminderSvc.SetProvider(provider)
+			log.Printf("[masante] SMS provider reloaded: %s", provider.Name())
+		}
+	} else if err == nil && !cfg.Enabled {
+		s.reminderSvc.SetProvider(nil)
+		log.Printf("[masante] SMS provider disabled")
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
