@@ -11,9 +11,10 @@
   <br><br>
   <img src="https://img.shields.io/badge/license-open--source-green" alt="License">
   <img src="https://img.shields.io/badge/go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/vue-3-4FC08D?logo=vuedotjs&logoColor=white" alt="Vue">
   <img src="https://img.shields.io/badge/database-SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite">
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-78%20passing-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-95+-brightgreen" alt="Tests">
 </p>
 
 ---
@@ -24,15 +25,18 @@ Designed for low-resource settings: works offline, runs on any machine, never me
 
 ## Features
 
-- **Setup wizard** — 5-step guided first-launch configuration (center info, admin account, schedule, SMS provider)
+- **Setup wizard** — 5-step guided first-launch configuration with live validation and back/forward navigation
 - **Patient management** — register, search, filter by status, risk scoring, program exit (death, transfer, dropout, cured)
-- **Appointment scheduling** — slot-based booking, calendar view, post-visit workflow (complete, missed, reschedule, cancel)
+- **Appointment scheduling** — slot-based booking with patient search, type selection, notes, and confirmation
+- **Calendar** — week view (hourly grid) and month view (day grid with RDV count), click any appointment to update status
+- **Appointment lifecycle** — complete, missed, reschedule (+7 days), cancel — all from the calendar modal
 - **SMS reminders** — automated J-7, J-2, day-of reminders via 5 providers (Africa's Talking, MTN, Orange, Twilio, Infobip)
-- **Community health workers (ASC)** — field visit list, report form, zone map
-- **User management** — role-based access control (Admin, Medecin, Infirmier, ASC)
-- **Exports** — patient lists and monthly reports in Excel and PDF
-- **Help center** — embedded guides and FAQ, works offline
+- **User management** — role-based access control (Admin, Medecin, Infirmier, ASC) with account lockout after 5 failed attempts
+- **Profile** — edit name, email, phone; change password with validation and session revocation
+- **Exports** — 6 reports (monthly, all patients, active, monitored, lost, exited) in both Excel and PDF
+- **Help center** — 8 expandable guides covering every feature + FAQ
 - **Confidentiality** — no disease names anywhere in the UI, SMS templates, or exports
+- **GPS detection** — automatic coordinates via browser geolocation during setup
 
 ## Quick start
 
@@ -48,11 +52,19 @@ The browser opens automatically at `http://localhost:8080`. The setup wizard gui
 
 ### Build from source
 
-Requires Go 1.22+ and a C compiler (for SQLite).
+Requires Go 1.22+, Node.js 18+, and a C compiler (for SQLite).
 
 ```bash
 git clone https://github.com/DrEYIKE-de/MaSante.git
 cd MaSante
+
+# Build frontend
+cd web/frontend
+npm install
+npm run build
+cd ../..
+
+# Build binary
 go build -o masante ./cmd/masante/
 ./masante
 ```
@@ -64,6 +76,7 @@ go build -o masante ./cmd/masante/
 
 Options:
   --port PORT        HTTP port (default: 8080)
+  --host HOST        Bind address (default: 127.0.0.1, use 0.0.0.0 for network)
   --data-dir DIR     Data directory (default: ./masante-data)
   --version          Print version and exit
 ```
@@ -82,7 +95,9 @@ masante/
 │   ├── sms/             Driven adapter — SMS providers
 │   ├── export/          Driven adapter — Excel and PDF generation
 │   └── bcrypt.go        Driven adapter — password hashing
-├── web/                 Embedded frontend (served from the binary)
+├── web/
+│   ├── frontend/        Vue 3 + Vite source (SPA)
+│   └── static/          Built frontend (embedded in binary via go:embed)
 └── cmd/masante/         Composition root
 ```
 
@@ -92,7 +107,7 @@ masante/
 |---|---|
 | `PatientRepository` | Patient CRUD, search, code generation, status counts |
 | `AppointmentRepository` | Appointment CRUD, calendar queries, slot availability |
-| `UserRepository` | User CRUD, username lookup |
+| `UserRepository` | User CRUD, username lookup, account lockout |
 | `SessionRepository` | Auth session lifecycle |
 | `ReminderRepository` | Reminder queue, delivery stats, message templates |
 | `CenterRepository` | Center configuration, setup wizard state |
@@ -111,46 +126,52 @@ masante/
 | Setup | `POST /api/v1/setup/{center,admin,schedule,sms,complete}` | Public (once) |
 | Auth | `POST /api/v1/auth/{login,logout}`, `GET /api/v1/auth/me` | Public / Auth |
 | Dashboard | `GET /api/v1/dashboard/{stats,today,overdue}` | Auth |
-| Patients | `GET/POST /api/v1/patients`, `GET/PUT /api/v1/patients/{id}`, `PUT .../exit` | Auth |
-| Appointments | `POST /api/v1/appointments`, `PUT .../{complete,missed,reschedule}`, `DELETE ...` | Auth |
+| Patients | `GET/POST /api/v1/patients`, `GET/PUT /api/v1/patients/{id}`, `PUT .../exit` | Auth (staff+) |
+| Appointments | `POST /api/v1/appointments`, `PUT .../{complete,missed,reschedule}`, `DELETE ...` | Auth (staff+) |
 | Calendar | `GET /api/v1/calendar/week`, `GET /api/v1/appointments/slots` | Auth |
-| Reminders | `GET /api/v1/reminders`, `POST .../test`, `POST .../send-all` | Auth |
-| Users | `GET/POST/PUT/DELETE /api/v1/users/{id}` | Admin only |
+| Reminders | `GET /api/v1/reminders`, `POST .../test`, `POST .../send-all` | Admin |
+| Users | `GET/POST/PUT/DELETE /api/v1/users/{id}` | Admin |
 | Profile | `GET/PUT /api/v1/profile`, `PUT .../password` | Auth |
-| Exports | `GET /api/v1/export/{patients,monthly}/{excel,pdf}` | Auth |
+| Exports | `GET /api/v1/export/{patients,monthly}/{excel,pdf}` | Admin/Medecin |
 
 ## Tech stack
 
 | Component | Choice | Why |
 |---|---|---|
-| Language | Go | Single binary, no runtime dependencies |
+| Backend | Go | Single binary, no runtime dependencies |
+| Frontend | Vue 3 + Vite | Reactive forms, component-based, fast builds |
 | Database | SQLite (WAL mode) | Zero config, embedded, works offline |
-| HTTP | `net/http` (stdlib) | No framework dependency, Go 1.22 routing |
+| HTTP | `net/http` (stdlib) | No framework dependency, Go 1.22+ routing |
 | Password hashing | bcrypt (cost 12) | Industry standard |
 | Auth | Server-side sessions in SQLite | Instant revocation, no JWT complexity |
 | SMS | Africa's Talking, MTN, Orange, Twilio, Infobip | Covers all major African providers |
 | Excel | excelize | .xlsx generation |
 | PDF | go-pdf/fpdf | PDF report generation |
-| Frontend | Embedded HTML/CSS/JS via `go:embed` | No build step, works offline |
+| Tests | Go testing + Vitest | Backend + frontend coverage |
 
 ## Database
 
-SQLite with WAL mode. Data stored in `./masante-data/masante.db`.
+SQLite with WAL mode. Data stored in `./masante-data/masante.db` (permissions `0700`).
 
 Designed for small to mid-size clinics: up to 2,000 patients and 5 concurrent users comfortably. For larger deployments, a migration path to PostgreSQL is planned.
 
 ### Tables
 
-`center` · `users` · `sessions` · `patients` · `appointments` · `reminders` · `message_templates` · `asc_visits` · `sms_config` · `settings` · `audit_log`
+`center` · `users` · `sessions` · `patients` · `appointments` · `reminders` · `message_templates` · `asc_visits` · `sms_config` · `settings` · `audit_log` · `schema_migrations`
 
 ## Security
 
 - **No disease names** anywhere — SMS messages say "health appointment", not the condition
-- **Password policy** — minimum 8 characters with at least one digit
+- **Password policy** — minimum 8 characters with at least one digit, enforced on all endpoints
+- **Account lockout** — 5 failed login attempts triggers a 15-minute lockout
 - **Sessions** — server-side with 24h expiry, instant revocation on logout or password change
 - **RBAC** — four roles with granular permissions (Admin > Medecin > Infirmier > ASC)
+- **Security headers** — X-Content-Type-Options, X-Frame-Options, Cache-Control: no-store, Referrer-Policy
+- **Request limits** — 1MB max body size to prevent DoS
 - **Audit trail** — every sensitive action logged (patient create/exit, user management, login)
+- **Localhost by default** — binds to 127.0.0.1 unless `--host 0.0.0.0` is specified
 - **Soft delete** — users are disabled, never hard-deleted
+- **No internal errors exposed** — generic error messages to clients, detailed logs server-side
 
 ## SMS providers
 
@@ -176,19 +197,26 @@ Configure during the setup wizard or later in Settings.
 ## Testing
 
 ```bash
+# Backend (Go)
 go test ./... -v
+
+# Frontend (Vitest)
+cd web/frontend
+npm test
 ```
 
-78 tests covering domain logic, application services, SQLite repositories, HTTP handlers, SMS factory, exports, and password validation. No external mocking framework — manual mocks only.
+78 backend tests (domain, services, repositories, handlers, SMS factory, exports, password validation) + 17 frontend tests (API client, store). No external mocking framework — manual mocks only.
 
 ## Roadmap
 
 - [ ] Internationalization (French, English, Duala, Ewondo, Bamileke)
-- [ ] PostgreSQL adapter for large deployments
+- [ ] PostgreSQL adapter for large deployments (5,000+ patients)
 - [ ] WhatsApp Business API integration
 - [ ] DHIS2 / OpenMRS data export
 - [ ] Mobile-optimized progressive web app
 - [ ] Landing page at masante.africa
+- [ ] Community health worker (ASC) field module
+- [ ] Patient risk score algorithm refinement
 
 ## License
 
