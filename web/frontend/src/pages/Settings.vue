@@ -1,7 +1,25 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { api } from '../api'
+import { setup as setupApi } from '../api'
+
+// Direct fetch for settings endpoints not in the api module.
+async function apiGet(path) {
+  try {
+    const res = await fetch('/api/v1' + path, { credentials: 'same-origin' })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) return { ok: false, error: (data && data.error) || 'Erreur' }
+    return { ok: true, data }
+  } catch (e) { return { ok: false, error: 'Connexion impossible' } }
+}
+async function apiPut(path, body) {
+  try {
+    const res = await fetch('/api/v1' + path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    const data = await res.json().catch(() => null)
+    if (!res.ok) return { ok: false, error: (data && data.error) || 'Erreur' }
+    return { ok: true, data }
+  } catch (e) { return { ok: false, error: 'Connexion impossible' } }
+}
 import { useToast } from '../composables/useToast'
 
 const router = useRouter()
@@ -23,7 +41,7 @@ const providers = [
 ]
 
 onMounted(async () => {
-  const res = await api.get('/settings/sms')
+  const res = await apiGet('/settings/sms')
   smsLoading.value = false
   if (res.ok && res.data) {
     smsForm.value.enabled = res.data.enabled
@@ -37,7 +55,7 @@ async function saveSMS() {
   smsError.value = ''
   if (smsForm.value.enabled && !smsForm.value.provider) { smsError.value = 'Selectionnez un fournisseur'; return }
   smsSaving.value = true
-  const res = await api.put('/settings/sms', smsForm.value)
+  const res = await apiPut('/settings/sms', smsForm.value)
   smsSaving.value = false
   if (!res.ok) { smsError.value = res.error; return }
   toast.success('Configuration SMS sauvegardee')
