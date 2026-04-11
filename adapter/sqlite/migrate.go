@@ -188,6 +188,11 @@ var migrations = []string{
 	// v2: account lockout fields
 	`ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0;
 	 ALTER TABLE users ADD COLUMN locked_until TEXT;`,
+
+	// v3: missing indexes
+	`CREATE INDEX IF NOT EXISTS idx_reminders_appointment ON reminders(appointment_id);
+	 CREATE INDEX IF NOT EXISTS idx_reminders_patient ON reminders(patient_id);
+	 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);`,
 }
 
 func Migrate(db *DB) error {

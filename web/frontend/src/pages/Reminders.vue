@@ -67,23 +67,6 @@ async function sendAll() {
   <div v-if="loading" class="ms-loading">Chargement...</div>
   <template v-else>
 
-    <!-- Header with help toggle -->
-    <div style="display:flex;align-items:center;margin-bottom:12px">
-      <button @click="showHelp = !showHelp" style="background:none;border:1px solid var(--gray-200);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-400);font-size:.85rem;font-weight:600;transition:.15s" :style="showHelp ? 'background:var(--primary);color:#fff;border-color:var(--primary)' : ''" title="Comment fonctionnent les rappels ?">?</button>
-    </div>
-
-    <!-- Help panel (toggle) -->
-    <div v-if="showHelp" style="padding:14px 18px;background:var(--gray-25);border-radius:var(--radius);font-size:.82rem;color:var(--gray-500);line-height:1.6;margin-bottom:14px">
-      <p>Les rappels SMS sont envoyes <strong>automatiquement</strong> aux patients avant leurs rendez-vous :</p>
-      <p style="margin-top:6px">
-        <strong>J-7</strong> = 7 jours avant &middot;
-        <strong>J-2</strong> = 2 jours avant &middot;
-        <strong>Jour J</strong> = le matin du RDV &middot;
-        <strong>Retard</strong> = apres un RDV manque
-      </p>
-      <p style="margin-top:6px">Le systeme verifie toutes les 5 minutes. Configurez votre fournisseur SMS dans <strong style="cursor:pointer;text-decoration:underline" @click="$router.push('/settings')">Parametres</strong>.</p>
-    </div>
-
     <!-- SMS not configured warning -->
     <div v-if="!smsConfigured && !queue.length" style="padding:10px 14px;background:var(--warning-bg);color:var(--warning);border-radius:var(--radius);font-size:.82rem;margin-bottom:12px">
       Aucun fournisseur SMS configure. <strong style="cursor:pointer;text-decoration:underline" @click="$router.push('/settings')">Configurer</strong>

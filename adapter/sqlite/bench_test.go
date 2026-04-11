@@ -187,8 +187,8 @@ func BenchmarkAppointmentCreate(b *testing.B) {
 	}
 }
 
-// BenchmarkSessionCreate measures session creation throughput.
-func BenchmarkSessionCreate(b *testing.B) {
+// BenchmarkSessionCreateDelete measures the full create+delete cycle for sessions.
+func BenchmarkSessionCreateDelete(b *testing.B) {
 	db := benchDB(b)
 	uid := benchSeedUser(b, db)
 	repo := NewSessionRepo(db)
@@ -196,8 +196,9 @@ func BenchmarkSessionCreate(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		token := fmt.Sprintf("bench-sd-token-%d", i)
 		s := &domain.Session{
-			Token:     fmt.Sprintf("bench-token-%d", i),
+			Token:     token,
 			UserID:    uid,
 			ExpiresAt: time.Now().Add(24 * time.Hour),
 			IPAddress: "127.0.0.1",
@@ -206,10 +207,14 @@ func BenchmarkSessionCreate(b *testing.B) {
 		if err := repo.Create(ctx, s); err != nil {
 			b.Fatalf("create session: %v", err)
 		}
+		if err := repo.DeleteByToken(ctx, token); err != nil {
+			b.Fatalf("delete session: %v", err)
+		}
 	}
 }
 
-// BenchmarkConcurrentReads measures read throughput under concurrent load.
+// BenchmarkConcurrentReads measures read throughput under concurrent load
+// using b.RunParallel.
 func BenchmarkConcurrentReads(b *testing.B) {
 	db := benchDB(b)
 	repo := NewPatientRepo(db)
