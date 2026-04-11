@@ -68,8 +68,7 @@ async function sendAll() {
   <template v-else>
 
     <!-- Header with help toggle -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div></div>
+    <div style="display:flex;align-items:center;margin-bottom:12px">
       <button @click="showHelp = !showHelp" style="background:none;border:1px solid var(--gray-200);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-400);font-size:.85rem;font-weight:600;transition:.15s" :style="showHelp ? 'background:var(--primary);color:#fff;border-color:var(--primary)' : ''" title="Comment fonctionnent les rappels ?">?</button>
     </div>
 

@@ -11,41 +11,28 @@ import (
 	"github.com/masante/masante/domain"
 )
 
-// TestChaos_ConcurrentReadWrite hammers the database with concurrent
-// reads and writes across multiple goroutines to surface race conditions
+// TestChaos_50GoroutinesCreatingPatients hammers the database with 50
+// concurrent goroutines inserting patients to surface race conditions
 // or SQLite lock contention issues.
-func TestChaos_ConcurrentReadWrite(t *testing.T) {
+func TestChaos_50GoroutinesCreatingPatients(t *testing.T) {
 	db := testDB(t)
 	patientRepo := NewPatientRepo(db)
-	userRepo := NewUserRepo(db)
 	ctx := context.Background()
 
-	// Seed a user for foreign key references.
-	u := &domain.User{
-		Username:     "chaos_user",
-		PasswordHash: "hash",
-		FullName:     "Chaos Tester",
-		Role:         domain.RoleAdmin,
-		Status:       domain.UserActive,
-	}
-	if err := userRepo.Create(ctx, u); err != nil {
-		t.Fatalf("seed user: %v", err)
-	}
-
-	const numGoroutines = 10
-	const opsPerGoroutine = 20
+	const numGoroutines = 50
+	const opsPerGoroutine = 10
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, numGoroutines*opsPerGoroutine)
 
-	// Writers: insert patients concurrently.
+	// Writers: insert patients concurrently from 50 goroutines.
 	for g := 0; g < numGoroutines; g++ {
 		wg.Add(1)
 		go func(gID int) {
 			defer wg.Done()
 			for i := 0; i < opsPerGoroutine; i++ {
 				p := &domain.Patient{
-					Code:            fmt.Sprintf("CH-%04d-%05d", gID, i),
+					Code:            fmt.Sprintf("G50-%04d-%05d", gID, i),
 					LastName:        fmt.Sprintf("LastName_%d_%d", gID, i),
 					FirstName:       fmt.Sprintf("FirstName_%d_%d", gID, i),
 					Sex:             "M",
@@ -84,11 +71,21 @@ func TestChaos_ConcurrentReadWrite(t *testing.T) {
 	for err := range errCh {
 		t.Error(err)
 	}
+
+	// Verify total count.
+	_, count, err := patientRepo.List(ctx, domain.PatientFilter{Page: 1, PerPage: 10})
+	if err != nil {
+		t.Fatalf("final count: %v", err)
+	}
+	expected := numGoroutines * opsPerGoroutine
+	if count != expected {
+		t.Errorf("total patients = %d, want %d", count, expected)
+	}
 }
 
-// TestChaos_LargeDataset inserts 1000 patients and verifies that queries
-// still return correct results at scale.
-func TestChaos_LargeDataset(t *testing.T) {
+// TestChaos_Insert1000ThenSearch inserts 1000 patients and verifies that
+// queries still return correct results at scale.
+func TestChaos_Insert1000ThenSearch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping large dataset test in short mode")
 	}
@@ -158,14 +155,16 @@ func TestChaos_LargeDataset(t *testing.T) {
 	}
 }
 
-// TestChaos_SQLInjectionAttempts verifies that SQL injection payloads in
-// patient names, codes, and search queries do not cause breakage or data leaks.
-func TestChaos_SQLInjectionAttempts(t *testing.T) {
+// TestChaos_SQLInjectionInPatientNames verifies that SQL injection payloads
+// including '; DROP TABLE patients; -- in patient names, codes, and search
+// queries do not cause breakage or data leaks.
+func TestChaos_SQLInjectionInPatientNames(t *testing.T) {
 	db := testDB(t)
 	repo := NewPatientRepo(db)
 	ctx := context.Background()
 
 	injections := []string{
+		"'; DROP TABLE patients; --",
 		"Robert'); DROP TABLE patients;--",
 		"' OR '1'='1",
 		"'; DELETE FROM patients WHERE '1'='1",
@@ -225,9 +224,10 @@ func TestChaos_SQLInjectionAttempts(t *testing.T) {
 	}
 }
 
-// TestChaos_RapidSessionCycles creates and deletes sessions rapidly to
-// test for leaks, deadlocks, or constraint violations.
-func TestChaos_RapidSessionCycles(t *testing.T) {
+// TestChaos_100RapidSessionCreateDeleteCycles creates and deletes sessions
+// rapidly across 100 concurrent goroutines to test for leaks, deadlocks,
+// or constraint violations.
+func TestChaos_100RapidSessionCreateDeleteCycles(t *testing.T) {
 	db := testDB(t)
 	userRepo := NewUserRepo(db)
 	sessionRepo := NewSessionRepo(db)
@@ -244,10 +244,10 @@ func TestChaos_RapidSessionCycles(t *testing.T) {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	const cycles = 200
+	const cycles = 100
 
 	var wg sync.WaitGroup
-	errCh := make(chan error, cycles*2)
+	errCh := make(chan error, cycles*3)
 
 	for i := 0; i < cycles; i++ {
 		wg.Add(1)
@@ -277,6 +277,12 @@ func TestChaos_RapidSessionCycles(t *testing.T) {
 			if err := sessionRepo.DeleteByToken(ctx, token); err != nil {
 				errCh <- fmt.Errorf("cycle %d: delete session: %w", i, err)
 			}
+
+			// Verify it's gone.
+			_, err = sessionRepo.GetByToken(ctx, token)
+			if err == nil {
+				errCh <- fmt.Errorf("cycle %d: session should be deleted", i)
+			}
 		}(i)
 	}
 
@@ -285,6 +291,130 @@ func TestChaos_RapidSessionCycles(t *testing.T) {
 
 	for err := range errCh {
 		t.Error(err)
+	}
+}
+
+// TestChaos_AppointmentsWithInvalidData verifies that the database rejects
+// appointments with invalid data: missing foreign keys, invalid types,
+// invalid statuses, and empty required fields.
+func TestChaos_AppointmentsWithInvalidData(t *testing.T) {
+	db := testDB(t)
+	pid := seedPatient(t, db)
+	seedCenter(t, db)
+	repo := NewAppointmentRepo(db)
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		apt     *domain.Appointment
+		wantErr bool
+	}{
+		{
+			name: "valid appointment",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "10:00",
+				Type:      domain.TypeConsultation,
+				Status:    domain.StatusConfirmed,
+			},
+			wantErr: false,
+		},
+		{
+			name: "nonexistent patient_id",
+			apt: &domain.Appointment{
+				PatientID: 999999,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "10:00",
+				Type:      domain.TypeConsultation,
+				Status:    domain.StatusConfirmed,
+			},
+			wantErr: true, // FK constraint
+		},
+		{
+			name: "invalid appointment type",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "10:00",
+				Type:      "invalid_type",
+				Status:    domain.StatusConfirmed,
+			},
+			wantErr: true, // CHECK constraint
+		},
+		{
+			name: "invalid status",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "10:00",
+				Type:      domain.TypeConsultation,
+				Status:    "invalid_status",
+			},
+			wantErr: true, // CHECK constraint
+		},
+		{
+			name: "empty date",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Time{},
+				Time:      "10:00",
+				Type:      domain.TypeConsultation,
+				Status:    domain.StatusConfirmed,
+			},
+			wantErr: false, // SQLite stores zero date as string, no constraint
+		},
+		{
+			name: "empty time",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "",
+				Type:      domain.TypeConsultation,
+				Status:    domain.StatusConfirmed,
+			},
+			wantErr: false, // no NOT NULL check on time content
+		},
+		{
+			name: "SQL injection in notes",
+			apt: &domain.Appointment{
+				PatientID: pid,
+				Date:      time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC),
+				Time:      "11:00",
+				Type:      domain.TypeConsultation,
+				Status:    domain.StatusConfirmed,
+				Notes:     "'; DROP TABLE appointments; --",
+			},
+			wantErr: false, // parameterised query should handle this safely
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.Create(ctx, tt.apt)
+			if tt.wantErr && err == nil {
+				t.Error("expected error, got nil")
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+
+	// Verify SQL injection in notes was stored literally.
+	results, _, err := repo.List(ctx, domain.AppointmentFilter{Page: 1, PerPage: 100})
+	if err != nil {
+		t.Fatalf("List after invalid data tests: %v", err)
+	}
+	foundInjection := false
+	for _, a := range results {
+		if a.Notes == "'; DROP TABLE appointments; --" {
+			foundInjection = true
+			break
+		}
+	}
+	if !foundInjection {
+		t.Error("SQL injection notes should be stored literally")
 	}
 }
 
