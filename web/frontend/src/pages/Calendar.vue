@@ -1,9 +1,46 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { calendar } from '../api'
+import { calendar, appointments } from '../api'
+import { useToast } from '../composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
+
+// Modal state.
+const showModal = ref(false)
+const modalApt = ref(null)
+const modalStatus = ref('')
+const modalNotes = ref('')
+const modalSaving = ref(false)
+
+function openAptModal(apt) {
+  modalApt.value = apt
+  modalStatus.value = ''
+  modalNotes.value = apt.Notes || ''
+  showModal.value = true
+}
+
+async function updateAptStatus() {
+  if (!modalStatus.value || !modalApt.value) return
+  modalSaving.value = true
+  let res
+  if (modalStatus.value === 'termine') {
+    res = await appointments.complete(modalApt.value.ID, { notes: modalNotes.value, follow_up_freq: 'trimestriel' })
+  } else if (modalStatus.value === 'manque') {
+    res = await appointments.missed(modalApt.value.ID, { notes: modalNotes.value, reschedule: false, send_reminder: true })
+  } else if (modalStatus.value === 'annule') {
+    res = await appointments.cancel(modalApt.value.ID)
+  } else if (modalStatus.value === 'reporte') {
+    // Reschedule needs a new date — for now just mark as missed with reschedule
+    res = await appointments.missed(modalApt.value.ID, { notes: modalNotes.value, reschedule: true, reschedule_days: 7 })
+  }
+  modalSaving.value = false
+  if (res && !res.ok) { toast.error(res.error); return }
+  toast.success('RDV mis a jour')
+  showModal.value = false
+  loadData()
+}
 const view = ref('week')
 const currentDate = ref(new Date())
 const aptData = ref([])
@@ -61,6 +98,9 @@ function aptCountForDay(day) { if(!day) return 0; return aptsForDate(localDate(n
 function selectedDayApts() { if(!selectedDay.value) return []; return aptsForDate(localDate(new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), selectedDay.value))) }
 
 function fmtType(t) { return {consultation:'Consultation',retrait_medicaments:'Retrait med.',bilan_sanguin:'Bilan sanguin',club_adherence:"Club d'adh."}[t]||t }
+function statusBg(s) { return {confirme:'var(--success-bg)',en_attente:'var(--warning-bg)',manque:'var(--danger-bg)',termine:'var(--info-bg)'}[s]||'var(--primary-subtle)' }
+function statusFg(s) { return {confirme:'var(--success)',en_attente:'var(--warning)',manque:'var(--danger)',termine:'var(--info)'}[s]||'var(--primary)' }
+function statusLabel(s) { return {confirme:'Confirme',en_attente:'En attente',manque:'Manque',termine:'Termine',annule:'Annule',reporte:'Reporte'}[s]||s }
 function dayName(d) { return d.toLocaleDateString('fr-FR',{weekday:'short'}) }
 function isToday(d) { const t=new Date(); return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear() }
 function isTodayNum(day) { if(!day) return false; const t=new Date(); return day===t.getDate()&&currentDate.value.getMonth()===t.getMonth()&&currentDate.value.getFullYear()===t.getFullYear() }
@@ -139,8 +179,8 @@ watch([currentDate, view], loadData)
             <tr v-for="h in hours" :key="h">
               <td style="padding:4px 8px;border-bottom:1px solid var(--gray-50);color:var(--gray-300);font-size:.72rem;vertical-align:top">{{ String(h).padStart(2,'0') }}:00</td>
               <td v-for="d in weekDays" :key="localDate(d)+h" style="padding:3px;border-bottom:1px solid var(--gray-50);border-left:1px solid var(--gray-50);vertical-align:top;min-height:40px" :style="isToday(d)?'background:var(--primary-bg)':''">
-                <div v-for="apt in aptsForDayHour(d,h)" :key="apt.ID" style="padding:2px 6px;background:var(--primary);color:#fff;border-radius:4px;margin-bottom:2px;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" :title="apt.PatientName+' — '+fmtType(apt.Type)">
-                  {{ (apt.PatientName||'').split(' ')[0] }}
+                <div v-for="apt in aptsForDayHour(d,h)" :key="apt.ID" @click="openAptModal(apt)" style="padding:2px 6px;border-radius:4px;margin-bottom:2px;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" :style="'background:' + statusBg(apt.Status) + ';color:' + statusFg(apt.Status)" :title="apt.PatientName+' — '+fmtType(apt.Type)">
+                  {{ apt.Time ? apt.Time.slice(0,5) : '' }} {{ (apt.PatientName||'').split(' ')[0] }}
                 </div>
               </td>
             </tr>
@@ -187,7 +227,7 @@ watch([currentDate, view], loadData)
           <div v-if="!selectedDay" class="ms-empty" style="padding:16px">Cliquez sur un jour du calendrier</div>
           <template v-else>
             <div v-if="!selectedDayApts().length" class="ms-empty" style="padding:16px">Aucun RDV ce jour</div>
-            <div v-for="apt in selectedDayApts()" :key="apt.ID" class="list-item" style="padding:8px 0">
+            <div v-for="apt in selectedDayApts()" :key="apt.ID" class="list-item" style="padding:8px 0;cursor:pointer" @click="openAptModal(apt)">
               <span style="font-size:.82rem;font-weight:600;color:var(--gray-500);min-width:44px">{{ apt.Time || '--:--' }}</span>
               <div class="item-info">
                 <div class="item-name">{{ apt.PatientName || 'Patient' }}</div>
@@ -200,4 +240,57 @@ watch([currentDate, view], loadData)
       </div>
     </div>
   </template>
+
+  <!-- RDV Detail Modal -->
+  <teleport to="body">
+    <template v-if="showModal && modalApt">
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:2000" @click="showModal=false"></div>
+      <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;max-height:85vh;overflow-y:auto;background:var(--white);border-radius:var(--radius-xl);box-shadow:0 20px 60px rgba(0,0,0,.15);z-index:2001">
+        <div class="card-head" style="padding:16px 20px;border-bottom:1px solid var(--gray-100)">
+          <h3>Rendez-vous</h3>
+          <button class="icon-btn" @click="showModal=false">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div style="padding:20px">
+          <!-- Patient info -->
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-25);border-radius:var(--radius);margin-bottom:16px">
+            <div class="avatar a1" style="width:40px;height:40px">{{ (modalApt.PatientName||'??').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() }}</div>
+            <div>
+              <div style="font-weight:600;font-size:.95rem">{{ modalApt.PatientName || 'Patient' }}</div>
+              <div style="font-size:.82rem;color:var(--gray-400)">{{ fmtType(modalApt.Type) }} — {{ modalApt.Time || '--:--' }}, {{ (modalApt.Date||'').slice(0,10) }}</div>
+            </div>
+            <span class="pill" :class="{'pill-success':modalApt.Status==='confirme','pill-warning':modalApt.Status==='en_attente','pill-danger':modalApt.Status==='manque','pill-info':modalApt.Status==='termine'}" style="margin-left:auto">{{ statusLabel(modalApt.Status) }}</span>
+          </div>
+
+          <!-- Change status -->
+          <div class="form-group">
+            <label>Changer le statut</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+              <div v-for="[val,lbl,color] in [['termine','Termine','var(--success)'],['manque','Manque','var(--danger)'],['reporte','Reporte (+7 jours)','var(--warning)'],['annule','Annule','var(--gray-500)']]" :key="val"
+                style="padding:10px 14px;border-radius:var(--radius);cursor:pointer;text-align:center;font-size:.85rem;font-weight:500;transition:.15s"
+                :style="modalStatus===val ? 'background:'+color+';color:#fff;border:1.5px solid '+color : 'border:1.5px solid var(--gray-200);color:var(--gray-600)'"
+                @click="modalStatus=val">
+                {{ lbl }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group" style="margin-top:12px">
+            <label>Notes</label>
+            <textarea class="form-input" v-model="modalNotes" rows="3" placeholder="Observations, raison de l'absence..."></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-secondary" style="width:auto" @click="showModal=false">Fermer</button>
+            <button class="btn btn-primary" style="width:auto" @click="updateAptStatus" :disabled="!modalStatus || modalSaving">{{ modalSaving ? 'Mise a jour...' : 'Valider' }}</button>
+            <button class="btn btn-secondary" style="width:auto;margin-left:auto" @click="router.push('/patient/'+modalApt.PatientID)">Voir la fiche</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </teleport>
 </template>
