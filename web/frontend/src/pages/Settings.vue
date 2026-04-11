@@ -33,11 +33,11 @@ const smsError = ref('')
 const smsHasKey = ref(false)
 
 const providers = [
-  { value: 'africastalking', label: "Africa's Talking", url: 'https://africastalking.com', signup: 'https://account.africastalking.com/auth/register', api: 'api.africastalking.com', desc: 'Recommande pour l\'Afrique. 25+ pays couverts.' },
-  { value: 'mtn', label: 'MTN SMS API', url: 'https://developer.mtn.com', signup: 'https://developer.mtn.com/signup', api: 'api.mtn.com', desc: 'Ideal pour les patients chez MTN. Cameroun, Nigeria, Ghana, RDC...' },
-  { value: 'orange', label: 'Orange SMS API', url: 'https://developer.orange.com', signup: 'https://developer.orange.com/register', api: 'api.orange.com', desc: 'Integration directe operateur. Cameroun, Senegal, Cote d\'Ivoire...' },
-  { value: 'twilio', label: 'Twilio', url: 'https://twilio.com', signup: 'https://www.twilio.com/try-twilio', api: 'api.twilio.com', desc: 'Leader mondial. Tres fiable, couverture mondiale.' },
-  { value: 'infobip', label: 'Infobip', url: 'https://infobip.com', signup: 'https://www.infobip.com/signup', api: 'api.infobip.com', desc: 'SMS + WhatsApp. Bonne couverture Afrique.' },
+  { value: 'africastalking', label: "Africa's Talking", keyHint: 'Ex: atsk_xxxxxxxxxxxxxxxxxxxx', secretHint: 'Ex: votre username Africa\'s Talking' },
+  { value: 'mtn', label: 'MTN SMS API', keyHint: 'Ex: Bearer token fourni par MTN', secretHint: 'Ex: consumer secret MTN' },
+  { value: 'orange', label: 'Orange SMS API', keyHint: 'Ex: token OAuth Orange', secretHint: 'Non requis pour Orange' },
+  { value: 'twilio', label: 'Twilio', keyHint: 'Ex: ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', secretHint: 'Ex: votre Auth Token Twilio' },
+  { value: 'infobip', label: 'Infobip', keyHint: 'Ex: votre cle API Infobip', secretHint: 'Non requis pour Infobip' },
 ]
 
 const selectedProvider = computed(() => providers.find(p => p.value === smsForm.value.provider))
@@ -101,23 +101,13 @@ const reports = [
                 </select>
               </div>
 
-              <!-- Provider info -->
-              <div v-if="selectedProvider" style="padding:12px 14px;background:var(--gray-25);border-radius:var(--radius);margin-bottom:12px;font-size:.82rem;line-height:1.5">
-                <div style="font-weight:600;margin-bottom:4px">{{ selectedProvider.label }}</div>
-                <div style="color:var(--gray-500)">{{ selectedProvider.desc }}</div>
-                <div style="margin-top:6px;display:flex;gap:12px">
-                  <span style="color:var(--gray-400)">API : {{ selectedProvider.api }}</span>
-                  <a :href="selectedProvider.signup" target="_blank" rel="noopener" style="color:var(--primary-muted);font-weight:600;text-decoration:none">Creer un compte &rarr;</a>
-                </div>
-              </div>
-
               <div class="form-group" style="margin-bottom:10px">
                 <label>Cle API {{ smsHasKey ? '(deja configuree)' : '' }}</label>
-                <input class="form-input" type="password" v-model="smsForm.api_key" :placeholder="smsHasKey ? 'Laisser vide pour garder la cle actuelle' : 'Collez votre cle API'">
+                <input class="form-input" type="password" v-model="smsForm.api_key" :placeholder="smsHasKey ? 'Laisser vide pour garder la cle actuelle' : (selectedProvider ? selectedProvider.keyHint : 'Collez votre cle API')">
               </div>
               <div class="form-group" style="margin-bottom:10px">
                 <label>Secret API</label>
-                <input class="form-input" type="password" v-model="smsForm.api_secret" :placeholder="smsHasKey ? 'Laisser vide pour garder' : 'Collez votre secret'">
+                <input class="form-input" type="password" v-model="smsForm.api_secret" :placeholder="smsHasKey ? 'Laisser vide pour garder' : (selectedProvider ? selectedProvider.secretHint : 'Collez votre secret')">
               </div>
               <div class="form-group" style="margin-bottom:10px">
                 <label>Nom expediteur</label>
