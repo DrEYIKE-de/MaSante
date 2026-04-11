@@ -16,10 +16,17 @@ func (s *Server) handleSetupStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	step, _ := s.setup.GetSetupStep(r.Context())
 	centerName := ""
+	hasData := false
 	if center, err := s.setup.GetCenter(r.Context()); err == nil && center != nil {
 		centerName = center.Name
+		hasData = true
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"setup_complete": done, "current_step": step, "center_name": centerName})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"setup_complete": done,
+		"current_step":   step,
+		"center_name":    centerName,
+		"has_data":       hasData,
+	})
 }
 
 func (s *Server) handleSetupCenter(w http.ResponseWriter, r *http.Request) {

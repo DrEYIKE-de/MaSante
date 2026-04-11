@@ -40,7 +40,27 @@ func main() {
 		log.Fatalf("impossible de creer %s: %v", *dataDir, err)
 	}
 
-	db, err := sqlite.Open(filepath.Join(*dataDir, "masante.db"))
+	// Auto-backup: if database exists, copy it before opening.
+	dbPath := filepath.Join(*dataDir, "masante.db")
+	if info, err := os.Stat(dbPath); err == nil && info.Size() > 0 {
+		backupDir := filepath.Join(*dataDir, "backups")
+		os.MkdirAll(backupDir, 0700)
+		backupName := fmt.Sprintf("masante-%s.db", time.Now().Format("2006-01-02-150405"))
+		backupPath := filepath.Join(backupDir, backupName)
+		if src, err := os.ReadFile(dbPath); err == nil {
+			if err := os.WriteFile(backupPath, src, 0600); err == nil {
+				fmt.Printf("[masante] Sauvegarde automatique: %s\n", backupPath)
+			}
+		}
+		// Keep only the last 10 backups.
+		if entries, err := os.ReadDir(backupDir); err == nil && len(entries) > 10 {
+			for _, e := range entries[:len(entries)-10] {
+				os.Remove(filepath.Join(backupDir, e.Name()))
+			}
+		}
+	}
+
+	db, err := sqlite.Open(dbPath)
 	if err != nil {
 		log.Fatalf("base de donnees: %v", err)
 	}
