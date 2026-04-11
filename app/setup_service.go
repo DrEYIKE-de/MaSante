@@ -45,6 +45,11 @@ func (s *SetupService) IsSetupDone(ctx context.Context) (bool, error) {
 	return s.center.IsSetupDone(ctx)
 }
 
+// GetSMSConfig returns the SMS configuration.
+func (s *SetupService) GetSMSConfig(ctx context.Context) (*domain.SMSConfig, error) {
+	return s.smsConfig.Get(ctx)
+}
+
 // GetCenter returns the center configuration.
 func (s *SetupService) GetCenter(ctx context.Context) (*domain.Center, error) {
 	return s.center.Get(ctx)

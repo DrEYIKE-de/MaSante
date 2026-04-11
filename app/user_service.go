@@ -73,7 +73,31 @@ func (s *UserService) Update(ctx context.Context, u *domain.User, updatedBy int6
 }
 
 // Disable soft-deletes a user and revokes all sessions.
+// Returns an error if this is the last active admin.
 func (s *UserService) Disable(ctx context.Context, id int64, disabledBy int64) error {
+	// Prevent disabling yourself.
+	if id == disabledBy {
+		return fmt.Errorf("impossible de desactiver votre propre compte")
+	}
+
+	// Prevent disabling the last admin.
+	target, err := s.users.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if target.Role == domain.RoleAdmin {
+		allUsers, _ := s.users.List(ctx)
+		activeAdmins := 0
+		for _, u := range allUsers {
+			if u.Role == domain.RoleAdmin && u.Status == domain.UserActive {
+				activeAdmins++
+			}
+		}
+		if activeAdmins <= 1 {
+			return fmt.Errorf("impossible de desactiver le dernier administrateur")
+		}
+	}
+
 	if err := s.users.Delete(ctx, id); err != nil {
 		return err
 	}

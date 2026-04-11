@@ -44,19 +44,52 @@ func TestUserService_Disable(t *testing.T) {
 	svc := newTestUserService()
 	ctx := context.Background()
 
-	u := &domain.User{Username: "toremove", FullName: "To Remove", Role: domain.RoleMedecin, Status: domain.UserActive}
-	svc.Create(ctx, u, "password123", 1)
+	// Create an admin (ID=1) and a medecin (ID=2).
+	admin := &domain.User{Username: "admin", FullName: "Admin", Role: domain.RoleAdmin, Status: domain.UserActive}
+	svc.Create(ctx, admin, "password123", 0)
+	target := &domain.User{Username: "toremove", FullName: "To Remove", Role: domain.RoleMedecin, Status: domain.UserActive}
+	svc.Create(ctx, target, "password123", admin.ID)
 
-	if err := svc.Disable(ctx, u.ID, 1); err != nil {
+	// Admin disables the medecin.
+	if err := svc.Disable(ctx, target.ID, admin.ID); err != nil {
 		t.Fatalf("Disable: %v", err)
 	}
 
-	got, err := svc.GetByID(ctx, u.ID)
+	got, err := svc.GetByID(ctx, target.ID)
 	if err != nil {
 		t.Fatalf("GetByID after disable: %v", err)
 	}
 	if got.Status != domain.UserDisabled {
 		t.Errorf("Status = %q, want desactive", got.Status)
+	}
+}
+
+func TestUserService_Disable_CannotDisableSelf(t *testing.T) {
+	svc := newTestUserService()
+	ctx := context.Background()
+
+	admin := &domain.User{Username: "admin", FullName: "Admin", Role: domain.RoleAdmin, Status: domain.UserActive}
+	svc.Create(ctx, admin, "password123", 0)
+
+	err := svc.Disable(ctx, admin.ID, admin.ID)
+	if err == nil {
+		t.Fatal("expected error when disabling self")
+	}
+}
+
+func TestUserService_Disable_CannotDisableLastAdmin(t *testing.T) {
+	svc := newTestUserService()
+	ctx := context.Background()
+
+	admin := &domain.User{Username: "admin", FullName: "Admin", Role: domain.RoleAdmin, Status: domain.UserActive}
+	svc.Create(ctx, admin, "password123", 0)
+	other := &domain.User{Username: "other", FullName: "Other", Role: domain.RoleMedecin, Status: domain.UserActive}
+	svc.Create(ctx, other, "password123", admin.ID)
+
+	// Other tries to disable the only admin.
+	err := svc.Disable(ctx, admin.ID, other.ID)
+	if err == nil {
+		t.Fatal("expected error when disabling last admin")
 	}
 }
 

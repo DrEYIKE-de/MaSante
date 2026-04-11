@@ -76,6 +76,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/v1/dashboard/today", s.requireAuth(s.handleDashboardToday))
 	s.mux.HandleFunc("GET /api/v1/dashboard/overdue", s.requireAuth(s.handleDashboardOverdue))
 
+	// Settings — SMS config (admin only, post-setup).
+	s.mux.HandleFunc("GET /api/v1/settings/sms", s.requireAuth(s.handleGetSMSConfig))
+	s.mux.HandleFunc("PUT /api/v1/settings/sms", s.requireAuth(s.handleSaveSMSConfig))
+
 	// Users (admin only).
 	onlyAdmin := s.requireRole(domain.RoleAdmin)
 	s.mux.HandleFunc("GET /api/v1/users", onlyAdmin(s.handleListUsers))
