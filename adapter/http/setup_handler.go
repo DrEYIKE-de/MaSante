@@ -2,8 +2,10 @@ package http
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
+	"github.com/masante/masante/adapter/sms"
 	"github.com/masante/masante/app"
 	"github.com/masante/masante/domain"
 )
@@ -110,6 +112,16 @@ func (s *Server) handleSetupSMS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSetupComplete(w http.ResponseWriter, r *http.Request) {
+	// Reload SMS provider before completing setup.
+	cfg, err := s.setup.GetSMSConfig(r.Context())
+	if err == nil && cfg.Enabled && cfg.Provider != "" {
+		provider, err := sms.NewProvider(*cfg)
+		if err == nil {
+			s.reminderSvc.SetProvider(provider)
+			log.Printf("[masante] SMS provider charge: %s", provider.Name())
+		}
+	}
+
 	if err := s.setup.Complete(r.Context()); err != nil {
 		if errors.Is(err, app.ErrSetupWrongStep) {
 			writeError(w, http.StatusConflict, err.Error())
